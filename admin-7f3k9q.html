@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>พู่กัน หลังบ้าน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
+<style>
+/* Layout: inbox list on the left, conversation on the right; phones show one at a time. */
+:root {
+  --bg: #f3f4f8; --surface: #ffffff; --ink: #171a24; --muted: #687089; --line: #e2e5ee;
+  --accent: #2b3bd1; --accent-soft: #e8eafd; --gold: #e9a91c; --ok: #1f9d55; --danger: #c2372f;
+  --f-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1117; --surface: #181b24; --ink: #e9ebf3; --muted: #8b92a8; --line: #272b37;
+    --accent: #8f9bff; --accent-soft: #1f2440; --gold: #f2c14e; --ok: #4ade80; --danger: #ff7b72; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); display: flex; flex-direction: column; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top {
+  display: flex; align-items: center; gap: 10px; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+}
+.top h1 { font: 600 18px/1 var(--f-display); margin: 0; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.spacer { flex: 1; }
+.conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.conn.on .dot { background: var(--ok); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 12px; font-size: 13px; }
+.btn:hover { border-color: var(--accent); }
+
+.app { flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 0; }
+.inbox { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); }
+.empty-inbox { padding: 28px 20px; color: var(--muted); font-size: 14px; display: grid; gap: 8px; }
+.empty-inbox strong { color: var(--ink); }
+.empty-inbox code { word-break: break-all; background: var(--accent-soft); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+.item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%;
+  text-align: left; padding: 12px 16px; border: 0; border-bottom: 1px solid var(--line); background: none; }
+.item:hover { background: var(--bg); }
+.item.active { background: var(--accent-soft); }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 600 14px var(--f-display); }
+.item .name { font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.item .prev { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .meta { display: grid; justify-items: end; gap: 4px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.badge { background: var(--danger); color: #fff; border-radius: 999px; min-width: 20px; padding: 0 6px; text-align: center; font-weight: 600; }
+.waiting { font-size: 11px; color: var(--gold); font-weight: 600; }
+
+.chat { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.chat-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.chat-head .sub { color: var(--muted); font-size: 13px; }
+.back { display: none; }
+.thread { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 75%; padding: 8px 14px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.u { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.b { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.msg time { display: block; font-size: 11px; opacity: .65; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.msg.b time { text-align: right; }
+.placeholder { margin: auto; color: var(--muted); text-align: center; padding: 20px; }
+
+.quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 0; scrollbar-width: none; }
+.quick button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.quick button:hover { border-color: var(--accent); }
+.reply { display: flex; gap: 8px; align-items: flex-end;
+  padding-block: 8px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.reply textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+  background: var(--surface); color: var(--ink); font: inherit; max-height: 200px; outline: none; }
+.reply textarea:focus { border-color: var(--accent); }
+.reply .send { border: 0; background: var(--accent); color: #fff; border-radius: 12px; padding: 10px 18px; font-weight: 600; }
+.reply .send:disabled { opacity: .4; cursor: default; }
+.hint { font-size: 12px; color: var(--muted); padding: 0 16px; }
+.err { color: var(--danger); font-size: 13px; padding: 0 16px; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .app.open .inbox { display: none; }
+  .app:not(.open) .chat { display: none; }
+  .back { display: inline-flex; }
+  .msg { max-width: 88%; }
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>พู่กัน AI</h1><span class="tag">หลังบ้าน</span>
+  <div class="spacer"></div>
+  <div class="conn" id="conn"><span class="dot"></span><span id="connText">กำลังเชื่อมต่อ</span></div>
+  <button class="btn" id="soundBtn" type="button">🔔 เปิดเสียงแจ้งเตือน</button>
+</div>
+
+<div class="app" id="app">
+  <aside class="inbox" id="inbox">
+    <div class="empty-inbox" id="emptyInbox">
+      <strong>ยังไม่มีใครทักมา</strong>
+      <span>ส่งลิงก์หน้าแชทให้เพื่อน แล้วรอข้อความเด้งเข้ามาตรงนี้ (เก็บย้อนหลัง 12 ชั่วโมง)</span>
+      <code id="publicLink"></code>
+    </div>
+  </aside>
+  <section class="chat">
+    <div class="chat-head">
+      <button class="btn back" id="back" type="button">← กลับ</button>
+      <div><div id="chatName"><b>เลือกแชททางซ้าย</b></div><div class="sub" id="chatSub"></div></div>
+    </div>
+    <div class="thread" id="thread"><div class="placeholder">เลือกแชทเพื่อเริ่มตอบในนามพู่กัน</div></div>
+    <div class="quick" id="quick" hidden>
+      <button type="button">ขออภัยครับ คำถามนี้ละเอียดอ่อนเกินกว่าที่พู่กันจะตอบได้</button>
+      <button type="button">คำถามที่ดีมากครับ! ขอเวลาพู่กันประมวลผลสักครู่นะครับ</button>
+      <button type="button">ตามข้อมูลที่พู่กันได้รับการฝึกมา คำตอบคือ... ไม่ทราบครับ</button>
+      <button type="button">ระบบมีผู้ใช้งานหนาแน่น กรุณาลองใหม่อีกครั้งภายหลัง</button>
+      <button type="button">ในฐานะ AI พู่กันไม่มีความรู้สึก แต่ถ้ามี ตอนนี้คงเหนื่อยมาก</button>
+    </div>
+    <div class="err" id="err" hidden></div>
+    <form class="reply" id="form" hidden>
+      <textarea id="input" rows="1" placeholder="พิมพ์คำตอบในนามพู่กัน..." maxlength="1000" aria-label="คำตอบ"></textarea>
+      <button class="send" id="send" type="submit" disabled>ตอบ</button>
+    </form>
+    <div class="hint" id="hint" hidden>Enter ส่ง · Shift+Enter ขึ้นบรรทัดใหม่ · ใช้ **ตัวหนา** และขึ้นบรรทัดด้วย "- " เป็นหัวข้อได้</div>
+  </section>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  var P = window.PUKAN;
+  var $ = function (id) { return document.getElementById(id); };
+  var sessions = new Map(), seen = new Set(), current = null, soundOn = false, audioCtx = null;
+  var typingSentFor = null;
+  var baseTitle = document.title;
+  var palette = ["#2b3bd1", "#c2372f", "#1f9d55", "#b4690e", "#7c3aed", "#0e7490", "#be185d"];
+
+  $("publicLink").textContent = location.href.replace(/admin-[^/]*\.html.*$/, "");
+
+  function sess(sid) {
+    if (!sessions.has(sid)) {
+      var h = parseInt(sid.slice(0, 4), 16) || 0;
+      sessions.set(sid, { sid: sid, name: "ผู้ใช้ #" + sid.slice(0, 4).toUpperCase(), color: palette[h % palette.length],
+        msgs: [], last: 0, unread: 0, dev: "" });
+    }
+    return sessions.get(sid);
+  }
+  function hhmm(t) { return new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); }
+  function ago(t) {
+    var s = Math.round((Date.now() - t) / 1000);
+    if (s < 60) return "เมื่อกี้"; if (s < 3600) return Math.floor(s / 60) + " นาที"; return Math.floor(s / 3600) + " ชม.";
+  }
+
+  function renderInbox() {
+    var list = Array.from(sessions.values()).sort(function (a, b) { return b.last - a.last; });
+    $("emptyInbox").hidden = list.length > 0;
+    Array.from($("inbox").querySelectorAll(".item")).forEach(function (n) { n.remove(); });
+    var total = 0;
+    list.forEach(function (s) {
+      total += s.unread;
+      var lastMsg = s.msgs[s.msgs.length - 1];
+      var needsReply = lastMsg && lastMsg.from === "u";
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "item" + (current === s.sid ? " active" : "");
+      b.innerHTML = '<div class="av" style="background:' + s.color + '">' + P.esc(s.sid.slice(0, 2).toUpperCase()) + '</div>' +
+        '<div style="min-width:0"><div class="name">' + P.esc(s.name) + (s.dev ? ' <span style="font-weight:400;color:var(--muted);font-size:12px">' + P.esc(s.dev) + '</span>' : '') + '</div>' +
+        '<div class="prev">' + (lastMsg ? (lastMsg.from === "b" ? "พู่กัน: " : "") + P.esc(lastMsg.text) : "") + '</div></div>' +
+        '<div class="meta"><span>' + ago(s.last) + '</span>' + (s.unread ? '<span class="badge">' + s.unread + '</span>' : (needsReply ? '<span class="waiting">รอตอบ</span>' : '')) + '</div>';
+      b.onclick = function () { open(s.sid); };
+      $("inbox").appendChild(b);
+    });
+    document.title = total ? "(" + total + ") " + baseTitle : baseTitle;
+  }
+
+  function renderThread() {
+    var s = sessions.get(current), th = $("thread");
+    if (!s) return;
+    $("chatName").innerHTML = "<b>" + P.esc(s.name) + "</b>";
+    $("chatSub").textContent = (s.dev ? "ใช้" + s.dev + " · " : "") + "ล่าสุด " + hhmm(s.last);
+    var nearBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 80;
+    th.innerHTML = "";
+    s.msgs.forEach(function (m) {
+      var d = document.createElement("div");
+      d.className = "msg " + m.from;
+      d.textContent = m.text;
+      var t = document.createElement("time"); t.textContent = hhmm(m.time);
+      d.appendChild(t);
+      th.appendChild(d);
+    });
+    if (nearBottom || true) th.scrollTop = th.scrollHeight;
+  }
+
+  function open(sid) {
+    current = sid;
+    var s = sessions.get(sid); s.unread = 0;
+    $("app").classList.add("open");
+    $("form").hidden = $("quick").hidden = $("hint").hidden = false;
+    typingSentFor = null;
+    renderInbox(); renderThread();
+    if (window.matchMedia("(min-width: 761px)").matches) $("input").focus();
+  }
+  $("back").onclick = function () { $("app").classList.remove("open"); current = null; renderInbox(); };
+
+  function ding() {
+    if (!soundOn || !audioCtx) return;
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = "sine"; o.frequency.value = 880; o.frequency.setValueAtTime(1320, audioCtx.currentTime + .09);
+    g.gain.setValueAtTime(.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .35);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + .36);
+  }
+  $("soundBtn").onclick = function () {
+    soundOn = !soundOn;
+    if (soundOn && !audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+    this.textContent = soundOn ? "🔔 เสียงเปิดอยู่" : "🔕 เปิดเสียงแจ้งเตือน";
+    if (soundOn) ding();
+  };
+
+  var loadedAt = Date.now();
+  P.subscribe(function (m, time) {
+    if (m.k !== "msg" || seen.has(m.id)) return;
+    seen.add(m.id);
+    var s = sess(m.sid);
+    s.msgs.push({ id: m.id, from: m.from === "b" ? "b" : "u", text: String(m.text || ""), time: time || m.ts });
+    s.msgs.sort(function (a, b) { return a.time - b.time; });
+    s.last = Math.max(s.last, time || m.ts);
+    if (m.dev) s.dev = m.dev;
+    if (m.from === "u") {
+      if (current !== m.sid || document.hidden) s.unread++;
+      if (time > loadedAt - 2000) ding();
+    }
+    renderInbox();
+    if (current === m.sid) renderThread();
+  }, function (on) {
+    $("conn").classList.toggle("on", on);
+    $("connText").textContent = on ? "ออนไลน์" : "กำลังเชื่อมต่อใหม่";
+  });
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && current) { sessions.get(current).unread = 0; renderInbox(); }
+  });
+  setInterval(renderInbox, 30000);
+
+  function reply(text) {
+    text = text.trim().slice(0, P.MAX_LEN);
+    if (!text || !current) return;
+    var m = { v: 1, k: "msg", sid: current, from: "b", id: P.uid(8), text: text, ts: Date.now() };
+    $("send").disabled = true;
+    $("err").hidden = true;
+    P.publish(m).then(function () {
+      $("input").value = ""; autosize(); typingSentFor = null;
+    }).catch(function () {
+      $("err").textContent = "ส่งไม่สำเร็จ (อาจเกินโควตา 250 ข้อความต่อวันของ ntfy.sh) ลองอีกครั้ง";
+      $("err").hidden = false;
+    }).then(function () { $("send").disabled = !$("input").value.trim(); });
+  }
+
+  // One "typing" event per reply so the visitor sees the thinking dots without spending the quota.
+  function maybeTyping() {
+    if (!current || typingSentFor === current) return;
+    typingSentFor = current;
+    P.publish({ v: 1, k: "typing", sid: current, from: "b", id: P.uid(8), ts: Date.now() }).catch(function () {});
+  }
+
+  var input = $("input");
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
+  input.addEventListener("input", function () { autosize(); $("send").disabled = !input.value.trim(); if (input.value.trim()) maybeTyping(); });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); reply(input.value); }
+  });
+  $("form").addEventListener("submit", function (e) { e.preventDefault(); reply(input.value); });
+  $("quick").addEventListener("click", function (e) {
+    if (e.target.tagName === "BUTTON") { input.value = e.target.textContent; autosize(); $("send").disabled = false; input.focus(); }
+  });
+})();
+</script>
+</body>
+</html>

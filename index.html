@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>พู่กัน AI</title>
+<meta name="description" content="พู่กัน AI ผู้ช่วยอัจฉริยะที่ตอบได้ทุกเรื่อง (มั้ง)">
+<meta name="theme-color" content="#f5f6fa">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232b3bd1'/%3E%3Cpath d='M44 12c3 0 6 3 5 6L32 38l-6-5 15-19c1-1 2-2 3-2z' fill='%23fff'/%3E%3Cpath d='M24 36l6 5c-1 7-7 11-14 10 3-2 3-5 3-8 0-4 2-6 5-7z' fill='%23ffd166'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
+<style>
+/* Layout: one centered conversation column, fixed composer at the bottom. */
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --ink: #171a24;
+  --muted: #687089;
+  --line: #e2e5ee;
+  --accent: #2b3bd1;
+  --accent-soft: #e8eafd;
+  --gold: #e9a91c;
+  --user-bubble: #2b3bd1;
+  --user-ink: #ffffff;
+  --danger: #c2372f;
+  --f-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1117; --surface: #181b24; --ink: #e9ebf3; --muted: #8b92a8; --line: #272b37;
+    --accent: #8f9bff; --accent-soft: #1f2440; --gold: #f2c14e; --user-bubble: #3341d6; --user-ink: #ffffff;
+    --danger: #ff7b72; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.65 var(--f-body);
+  display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header {
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line); background: var(--bg);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 600; font-size: 20px; letter-spacing: .2px; }
+.logo { width: 34px; height: 34px; flex: none; }
+.model {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); font-size: 13px; color: var(--muted);
+}
+.model b { color: var(--ink); font-weight: 600; }
+.spacer { flex: 1; }
+.icon-btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 10px;
+  padding: 7px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;
+}
+.icon-btn:hover { border-color: var(--accent); }
+
+main { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+.col { max-width: 760px; margin: 0 auto; padding-block: 24px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.welcome { padding-top: 6vh; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.welcome .logo { width: 64px; height: 64px; }
+.welcome h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(26px, 5vw, 34px); margin: 0; text-wrap: balance; line-height: 1.3; }
+.welcome p { margin: 0; color: var(--muted); max-width: 46ch; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 620px; margin-top: 18px; }
+.chip {
+  text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--surface); display: grid; gap: 2px; min-width: 0;
+}
+.chip:hover { border-color: var(--accent); }
+.chip strong { font-weight: 600; font-size: 15px; }
+.chip span { color: var(--muted); font-size: 13px; }
+
+.msgs { display: grid; gap: 22px; }
+.row { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.row.u { justify-content: flex-end; }
+.avatar { width: 30px; height: 30px; flex: none; margin-top: 2px; }
+.bubble { min-width: 0; overflow-wrap: anywhere; }
+.row.u .bubble {
+  background: var(--user-bubble); color: var(--user-ink); padding: 10px 16px;
+  border-radius: 20px 20px 6px 20px; max-width: 80%; white-space: pre-wrap;
+}
+.row.b .bubble { padding-top: 3px; flex: 1; }
+.row.u.failed .bubble { opacity: .55; }
+.fail { font-size: 12px; color: var(--danger); text-align: right; margin-top: 4px; }
+.fail button { border: 0; background: none; color: var(--danger); text-decoration: underline; padding: 0; }
+.bubble code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; }
+.bubble .li { display: block; padding-left: 1.2em; text-indent: -1.1em; }
+.bubble .li::before { content: "• "; color: var(--accent); }
+.tools { display: flex; gap: 4px; margin-top: 6px; color: var(--muted); }
+.tools button { border: 0; background: none; padding: 4px 6px; border-radius: 6px; font-size: 13px; color: var(--muted); }
+.tools button:hover { background: var(--accent-soft); color: var(--ink); }
+.caret::after { content: "▍"; color: var(--accent); animation: blink 1s steps(2) infinite; }
+
+.thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; padding-top: 4px; }
+.ink { display: inline-flex; gap: 5px; }
+.ink i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: drip 1.2s ease-in-out infinite; }
+.ink i:nth-child(2) { animation-delay: .15s; }
+.ink i:nth-child(3) { animation-delay: .3s; }
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 30%, var(--ink) 50%, var(--muted) 70%);
+  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shine 2s linear infinite;
+}
+@keyframes drip { 0%, 100% { transform: translateY(0); opacity: .35; } 40% { transform: translateY(-5px); opacity: 1; } }
+@keyframes shine { to { background-position: -200% 0; } }
+@keyframes blink { 50% { opacity: 0; } }
+
+footer {
+  padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--bg);
+}
+.composer {
+  max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 8px 8px 8px 18px;
+  box-shadow: 0 6px 24px -12px rgba(23, 26, 60, .25);
+}
+.composer:focus-within { border-color: var(--accent); }
+textarea {
+  flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent; color: var(--ink);
+  font: inherit; line-height: 1.5; max-height: 180px; padding: 7px 0;
+}
+textarea::placeholder { color: var(--muted); }
+.send {
+  width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent); color: #fff;
+  display: grid; place-items: center; flex: none;
+}
+.send:disabled { opacity: .35; cursor: default; }
+.disclaimer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+@media (max-width: 520px) {
+  .chips { grid-template-columns: minmax(0, 1fr); }
+  .model { display: none; }
+  .icon-btn span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="pukan" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="18" fill="var(--accent)"/>
+    <path d="M45 11c3.2 0 6.2 3.3 4.8 6.4L32.5 38.2l-6.3-5.1 15.4-19.6c.9-1.2 2-2.5 3.4-2.5z" fill="#fff"/>
+    <path d="M25 35.4l6.2 5c-.8 7.4-7.3 11.8-15 10.5 3-2.1 3.3-5 3.3-8 0-4.4 2.5-6.6 5.5-7.5z" fill="var(--gold)"/>
+  </symbol>
+</svg>
+
+<header>
+  <div class="brand"><svg class="logo"><use href="#pukan"/></svg>พู่กัน AI</div>
+  <div class="model">โมเดล <b>พู่กัน 4.5 Ultra</b> ▾</div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="newChat" type="button" title="เริ่มแชทใหม่">✎ <span>แชทใหม่</span></button>
+</header>
+
+<main id="scroller">
+  <div class="col">
+    <section class="welcome" id="welcome">
+      <svg class="logo"><use href="#pukan"/></svg>
+      <h1>สวัสดีครับ วันนี้ให้พู่กันช่วยอะไรดี?</h1>
+      <p>ถามได้ทุกเรื่อง ตั้งแต่การบ้าน สูตรอาหาร ไปจนถึงความหมายของชีวิต</p>
+      <div class="chips" id="chips">
+        <button class="chip" type="button" data-q="ช่วยแต่งกลอนรักสั้นๆ ให้หน่อย"><strong>แต่งกลอนรัก</strong><span>สั้นๆ เอาไปส่งให้คนพิเศษ</span></button>
+        <button class="chip" type="button" data-q="วางแผนเที่ยวเชียงใหม่ 3 วัน 2 คืน งบ 5,000 บาท"><strong>วางแผนเที่ยวเชียงใหม่</strong><span>3 วัน 2 คืน งบ 5,000 บาท</span></button>
+        <button class="chip" type="button" data-q="อธิบายควอนตัมคอมพิวเตอร์ให้เด็ก 5 ขวบเข้าใจ"><strong>อธิบายควอนตัม</strong><span>แบบเด็ก 5 ขวบเข้าใจ</span></button>
+        <button class="chip" type="button" data-q="เที่ยงนี้กินอะไรดี"><strong>เที่ยงนี้กินอะไรดี</strong><span>คำถามที่ยากที่สุดของมนุษยชาติ</span></button>
+      </div>
+    </section>
+    <div class="msgs" id="msgs"></div>
+  </div>
+</main>
+
+<footer>
+  <form class="composer" id="form">
+    <textarea id="input" rows="1" placeholder="ถามพู่กันได้เลย..." maxlength="1000" aria-label="ข้อความถึงพู่กัน"></textarea>
+    <button class="send" id="send" type="submit" disabled aria-label="ส่ง">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+  </form>
+  <div class="disclaimer">พู่กันอาจให้ข้อมูลผิดพลาดได้ โปรดตรวจสอบคำตอบที่สำคัญ</div>
+</footer>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  var P = window.PUKAN;
+  var $ = function (id) { return document.getElementById(id); };
+  var msgsEl = $("msgs"), input = $("input"), sendBtn = $("send"), scroller = $("scroller");
+  var pageStart = Date.now();
+  var sid, history, seen, waiting = false, typingUntil = 0, thinkingEl = null, waitTimer = null, slowTimer = null;
+
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+  function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } }
+  var device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "มือถือ" : "คอม";
+
+  function startSession(newOne) {
+    sid = (!newOne && load("pukan_sid")) || P.uid(6);
+    store("pukan_sid", sid);
+    history = load("pukan_hist_" + sid) || [];
+    seen = new Set(history.map(function (m) { return m.id; }));
+    msgsEl.innerHTML = "";
+    waiting = false; typingUntil = 0; hideThinking();
+    history.forEach(function (m) { render(m, false); });
+    // If the last message is ours and unanswered, keep the "thinking" state up.
+    var last = history[history.length - 1];
+    if (last && last.from === "u" && !last.failed) { waiting = true; refreshThinking(); }
+    $("welcome").hidden = history.length > 0;
+  }
+
+  function saveHistory() { store("pukan_hist_" + sid, history.slice(-200)); }
+
+  function scrollDown() { scroller.scrollTop = scroller.scrollHeight; }
+
+  function render(m, animate) {
+    var row = document.createElement("div");
+    row.className = "row " + (m.from === "u" ? "u" : "b");
+    if (m.from === "u") {
+      var b = document.createElement("div");
+      b.className = "bubble";
+      b.textContent = m.text;
+      row.appendChild(b);
+      if (m.failed) markFailed(row, m);
+    } else {
+      row.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="bubble"><div class="text"></div></div>';
+      var t = row.querySelector(".text");
+      if (animate) typeOut(t, m.text, row); else { t.innerHTML = P.fmt(m.text); addTools(row, m.text); }
+    }
+    msgsEl.insertBefore(row, thinkingEl && thinkingEl.parentNode === msgsEl ? thinkingEl : null);
+    scrollDown();
+    return row;
+  }
+
+  function addTools(row, text) {
+    var tools = document.createElement("div");
+    tools.className = "tools";
+    tools.innerHTML = '<button type="button" title="คัดลอก">⧉ คัดลอก</button><button type="button" title="ชอบ">👍</button><button type="button" title="ไม่ชอบ">👎</button>';
+    var copy = tools.children[0];
+    copy.onclick = function () {
+      var done = function () { copy.textContent = "✓ คัดลอกแล้ว"; setTimeout(function () { copy.textContent = "⧉ คัดลอก"; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+    };
+    tools.children[1].onclick = tools.children[2].onclick = function () { this.style.color = "var(--accent)"; };
+    row.querySelector(".bubble").appendChild(tools);
+  }
+
+  // Fake token streaming so a hand-typed answer looks generated.
+  function typeOut(el, text, row) {
+    var chars = Array.from(text), i = 0;
+    el.classList.add("caret");
+    (function step() {
+      i = Math.min(chars.length, i + 2 + Math.floor(Math.random() * 4));
+      el.innerHTML = P.fmt(chars.slice(0, i).join(""));
+      scrollDown();
+      if (i < chars.length) setTimeout(step, 18 + Math.random() * 40);
+      else { el.classList.remove("caret"); addTools(row, text); }
+    })();
+  }
+
+  function markFailed(row, m) {
+    var f = document.createElement("div");
+    f.className = "fail";
+    f.innerHTML = 'ส่งไม่สำเร็จ <button type="button">ลองส่งอีกครั้ง</button>';
+    row.classList.add("failed");
+    row.appendChild(f);
+    row.style.flexDirection = "column"; row.style.alignItems = "flex-end";
+    f.querySelector("button").onclick = function () {
+      row.remove();
+      history = history.filter(function (x) { return x.id !== m.id; });
+      seen.delete(m.id);
+      send(m.text);
+    };
+  }
+
+  function showThinking() {
+    if (thinkingEl) return;
+    thinkingEl = document.createElement("div");
+    thinkingEl.className = "row b";
+    thinkingEl.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="thinking"><span class="ink"><i></i><i></i><i></i></span><span class="shimmer" id="thinkText">พู่กันกำลังคิด...</span></div>';
+    msgsEl.appendChild(thinkingEl);
+    scrollDown();
+    clearTimeout(slowTimer);
+    slowTimer = setTimeout(function () {
+      var t = document.getElementById("thinkText");
+      if (t) t.textContent = "พู่กันกำลังคิดหนักมาก กำลังจุ่มหมึกเพิ่ม...";
+    }, 40000);
+  }
+  function hideThinking() {
+    clearTimeout(slowTimer);
+    if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+  }
+  function refreshThinking() {
+    if (waiting || Date.now() < typingUntil) showThinking(); else hideThinking();
+  }
+
+  function send(text) {
+    text = text.trim().slice(0, P.MAX_LEN);
+    if (!text) return;
+    $("welcome").hidden = true;
+    var m = { v: 1, k: "msg", sid: sid, from: "u", id: P.uid(8), text: text, ts: Date.now(), dev: device };
+    seen.add(m.id);
+    history.push(m); saveHistory();
+    var row = render(m, false);
+    waiting = true;
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(refreshThinking, 600);
+    P.publish(m).catch(function () {
+      m.failed = true; saveHistory();
+      waiting = false; refreshThinking();
+      markFailed(row, m);
+    });
+  }
+
+  P.subscribe(function (m, serverTime) {
+    if (m.sid !== sid) return;
+    if (m.k === "typing" && m.from === "b") {
+      if (Date.now() - serverTime < 15000) { typingUntil = Date.now() + 15000; refreshThinking(); setTimeout(refreshThinking, 15100); }
+      return;
+    }
+    if (m.k !== "msg" || seen.has(m.id)) return;
+    seen.add(m.id);
+    history.push(m); saveHistory();
+    $("welcome").hidden = true;
+    if (m.from === "b") {
+      waiting = false; typingUntil = 0; hideThinking();
+      render(m, serverTime > pageStart - 3000);
+    } else {
+      render(m, false);
+    }
+  });
+
+  $("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    send(input.value);
+    input.value = ""; autosize(); sendBtn.disabled = true;
+  });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); }
+  });
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 180) + "px"; }
+  input.addEventListener("input", function () { autosize(); sendBtn.disabled = !input.value.trim(); });
+  $("chips").addEventListener("click", function (e) {
+    var c = e.target.closest(".chip"); if (c) send(c.dataset.q);
+  });
+  $("newChat").onclick = function () { startSession(true); input.focus(); };
+
+  startSession(false);
+})();
+</script>
+</body>
+</html>
