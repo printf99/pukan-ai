@@ -273,7 +273,8 @@ window.PUKAN.model = function (id) {
       embeds: [{ title: title.slice(0, 250), description: text.slice(0, 4000), color: 0x2b3bd1, timestamp: new Date().toISOString() }],
       allowed_mentions: { parse: [] }
     }));
-    fetch(P.DISCORD_WEBHOOK, { method: "POST", body: form, mode: "no-cors" }).catch(function () {});
+    // keepalive: the alert still goes out if the visitor locks the phone or leaves right after sending.
+    fetch(P.DISCORD_WEBHOOK, { method: "POST", body: form, mode: "no-cors", keepalive: true }).catch(function () {});
   };
 })(window.PUKAN);
 
