@@ -272,10 +272,11 @@ window.PUKAN.model = function (id) {
       P.onNeedLogin();
     }
   });
+  // The popup must open straight from the tap (no await before it), or Safari blocks it.
   P.loginWithGoogle = function () {
-    return auth.signOut().then(function () {
-      return auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    });
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    return auth.signInWithPopup(provider);
   };
   P.currentEmail = function () { return auth.currentUser && auth.currentUser.email; };
 
