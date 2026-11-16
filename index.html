@@ -385,18 +385,20 @@ window.PUKAN.model = function (id) {
     });
   };
 
-  // Alert in the owner's Discord. Sent as a form so the browser needs no CORS answer from Discord.
+  // Alert in the owner's Discord.
   // Best effort: a failed alert never blocks the chat.
   P.notify = function (title, text) {
     if (!/^https:\/\/(\w+\.)?discord(app)?\.com\/api\/webhooks\//.test(P.DISCORD_WEBHOOK || "")) return;
-    var form = new FormData();
-    form.append("payload_json", JSON.stringify({
-      username: "พู่กัน หลังบ้าน",
-      embeds: [{ title: title.slice(0, 250), description: text.slice(0, 4000), color: 0x2b3bd1, timestamp: new Date().toISOString() }],
-      allowed_mentions: { parse: [] }
-    }));
-    // keepalive: the alert still goes out if the visitor locks the phone or leaves right after sending.
-    fetch(P.DISCORD_WEBHOOK, { method: "POST", body: form, mode: "no-cors", keepalive: true }).catch(function () {});
+    // Plain JSON POST: Discord answers CORS for webhooks (tested: 200 from a GitHub Pages origin).
+    fetch(P.DISCORD_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "พู่กัน หลังบ้าน",
+        embeds: [{ title: title.slice(0, 250), description: text.slice(0, 4000), color: 0x2b3bd1, timestamp: new Date().toISOString() }],
+        allowed_mentions: { parse: [] }
+      })
+    }).catch(function () {});
   };
 })(window.PUKAN);
 
