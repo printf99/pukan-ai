@@ -257,6 +257,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
     $("composer").hidden = false;
     $("err").hidden = true;
     typingSentFor = null;
+    autosize();
     renderInbox(); renderThread(true);
     if (window.matchMedia("(min-width: 761px)").matches) $("input").focus();
   }
