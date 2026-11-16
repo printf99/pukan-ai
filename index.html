@@ -290,6 +290,8 @@ window.PUKAN = {
   },
   // Discord webhook that gets an alert for every visitor message (Server → channel → Integrations → Webhooks).
   // It is visible in the page source: use a private server, and make a new webhook if it gets abused.
+  // Your Discord user ID: alerts tag you with @ (Developer Mode → tap your profile → Copy User ID). Empty = no tag.
+  DISCORD_MENTION_ID: "863448908957089803",
   DISCORD_WEBHOOK: "https://discord.com/api/webhooks/1571869894146920569/kpA5ymgnwaeKYdvq91v_ggCy6qWE1ze6zwcJYvGWdYft2Zq5hFOyH1BXUDE83a0T5jDq",
   BOT_NAME: "พู่กัน",
   MAX_LEN: 1000,
@@ -395,8 +397,10 @@ window.PUKAN.model = function (id) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "พู่กัน หลังบ้าน",
+        content: P.DISCORD_MENTION_ID ? "<@" + P.DISCORD_MENTION_ID + "> มีคนทักพู่กัน!" : "",
         embeds: [{ title: title.slice(0, 250), description: text.slice(0, 4000), color: 0x2b3bd1, timestamp: new Date().toISOString() }],
-        allowed_mentions: { parse: [] }
+        // Only ever ping the owner, never anything typed by a visitor.
+        allowed_mentions: { parse: [], users: P.DISCORD_MENTION_ID ? [P.DISCORD_MENTION_ID] : [] }
       })
     }).catch(function () {});
   };
