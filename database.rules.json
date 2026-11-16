@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "meta": {
+      ".read": "auth != null && ((auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true) || (query.orderByChild == 'owner' && query.equalTo == auth.uid))",
+      ".indexOn": ["owner", "updated"],
+      "$sid": {
+        ".write": "auth != null && ((auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true) || ((!data.exists() || data.child('owner').val() == auth.uid) && newData.child('owner').val() == auth.uid))",
+        "title": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "updated": { ".validate": "newData.val() == now" }
+      }
+    },
+    "msgs": {
+      ".read": "auth != null && auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true",
+      "$sid": {
+        ".read": "auth != null && root.child('meta/' + $sid + '/owner').val() == auth.uid",
+        ".indexOn": ["t"],
+        "$id": {
+          ".write": "auth != null && !data.exists() && ((auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true) || (root.child('meta/' + $sid + '/owner').val() == auth.uid && newData.child('from').val() == 'u'))",
+          ".validate": "newData.hasChildren(['id', 'from', 'text', 't']) && newData.child('id').val() == $id",
+          "text": { ".validate": "newData.isString() && newData.val().length <= 1000" },
+          "t": { ".validate": "newData.val() == now" }
+        }
+      }
+    },
+    "typing": {
+      "$sid": {
+        ".read": "auth != null && ((auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true) || root.child('meta/' + $sid + '/owner').val() == auth.uid)",
+        ".write": "auth != null && auth.token.email == 'YOUR_GMAIL@gmail.com' && auth.token.email_verified == true"
+      }
+    }
+  }
+}

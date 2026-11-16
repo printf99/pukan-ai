@@ -216,11 +216,24 @@ footer {
   </footer>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
 // Shared settings for the chat page and the admin page.
-// TOPIC is the ntfy.sh channel both pages talk through. Change it to start a fresh, empty channel.
+// Chats are stored in Firebase Realtime Database (kept permanently, no daily message cap).
+// ntfy.sh is used only to push an alert to the owner's phone when a visitor writes.
 window.PUKAN = {
-  TOPIC: "pukan-ai-b9d8b2b623e586bd",
+  // From Firebase console → Project settings → Your apps → Web app (public values, not secrets).
+  FIREBASE: {
+    apiKey: "AIzaSyAXaYxfR4PLcQnfPPVJrdudnJvelq9eQ2Q",
+    authDomain: "pukun-ai-fake.firebaseapp.com",
+    databaseURL: "https://pukun-ai-fake-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "pukun-ai-fake",
+    appId: "1:741249144782:web:13eb79697974d3f087fd9f"
+  },
+  // Subscribe to this channel in the ntfy phone app to get an alert for every visitor message.
+  NOTIFY_TOPIC: "pukan-alert-4e1c7a93d05b",
   RELAY: "https://ntfy.sh/",
   BOT_NAME: "พู่กัน",
   MAX_LEN: 1000,
@@ -238,33 +251,91 @@ window.PUKAN.model = function (id) {
   return list[0];
 };
 
-window.PUKAN.publish = function (msg) {
-  return fetch(window.PUKAN.RELAY + window.PUKAN.TOPIC, {
-    method: "POST",
-    body: JSON.stringify(msg)
-  }).then(function (r) {
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r;
-  });
-};
+// ---- Firebase plumbing ----
+// Visitors sign in anonymously (invisible to them). The admin page (body data-role="admin")
+// waits for a Google sign-in; the database rules decide which Google account is the admin.
+(function (P) {
+  firebase.initializeApp(P.FIREBASE);
+  var auth = firebase.auth(), db = firebase.database();
+  var TS = firebase.database.ServerValue.TIMESTAMP;
+  P.role = document.body.dataset.role === "admin" ? "admin" : "visitor";
 
-// Calls onMsg(parsedMessage, serverTimeMs) for every chat message on the channel,
-// including the last 12 hours of history on connect.
-window.PUKAN.subscribe = function (onMsg, onState) {
-  var es = new EventSource(window.PUKAN.RELAY + window.PUKAN.TOPIC + "/sse?since=12h");
-  es.onopen = function () { onState && onState(true); };
-  es.onerror = function () { onState && onState(false); };
-  es.onmessage = function (e) {
-    var d;
-    try { d = JSON.parse(e.data); } catch (_) { return; }
-    if (d.event !== "message" || !d.message) return;
-    var m;
-    try { m = JSON.parse(d.message); } catch (_) { return; }
-    if (!m || m.v !== 1 || !m.sid || !m.id) return;
-    onMsg(m, (d.time || 0) * 1000);
+  var resolveUser;
+  P.ready = new Promise(function (r) { resolveUser = r; });
+  auth.onAuthStateChanged(function (user) {
+    if (P.role === "visitor") {
+      if (user) resolveUser(user);
+      else auth.signInAnonymously().catch(function (e) { console.error("anonymous sign-in failed", e); });
+    } else if (user && !user.isAnonymous) {
+      resolveUser(user);
+    } else if (P.onNeedLogin) {
+      P.onNeedLogin();
+    }
+  });
+  P.loginWithGoogle = function () {
+    return auth.signOut().then(function () {
+      return auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    });
   };
-  return es;
-};
+  P.currentEmail = function () { return auth.currentUser && auth.currentUser.email; };
+
+  // Drop undefined fields (the database rejects them).
+  function clean(o) { return JSON.parse(JSON.stringify(o)); }
+
+  P.publish = function (msg) {
+    return P.ready.then(function (user) {
+      if (msg.k === "typing") return db.ref("typing/" + msg.sid).set(TS);
+      var meta = msg.from === "u"
+        ? clean({ owner: user.uid, uid: msg.uid, title: msg.title, dev: msg.dev, model: msg.model, updated: TS })
+        : { updated: TS };
+      // Chat info first: the rules check the chat's owner before accepting a message in it.
+      return db.ref("meta/" + msg.sid).update(meta).then(function () {
+        var m = clean(msg); m.t = TS;
+        return db.ref("msgs/" + msg.sid + "/" + msg.id).set(m);
+      });
+    });
+  };
+
+  // Calls onMsg(message, serverTimeMs) for every message in the chats this page may see:
+  // a visitor's own chats, or (admin) the 150 most recently active chats.
+  // Bot "typing" signals arrive as { k: "typing" } messages.
+  P.subscribe = function (onMsg, onState, onError) {
+    var watched = {};
+    function fail(e) { console.error(e); if (onError) onError(e); }
+    function watch(sid) {
+      if (watched[sid]) return;
+      watched[sid] = true;
+      db.ref("msgs/" + sid).orderByChild("t").limitToLast(200).on("child_added", function (snap) {
+        var m = snap.val();
+        if (!m || m.v !== 1 || !m.id) return;
+        m.sid = sid;
+        onMsg(m, m.t || m.ts || Date.now());
+      }, fail);
+      if (P.role === "visitor") {
+        db.ref("typing/" + sid).on("value", function (snap) {
+          var t = snap.val();
+          if (t) onMsg({ v: 1, k: "typing", sid: sid, from: "b", id: "typing-" + t }, t);
+        }, fail);
+      }
+    }
+    P.ready.then(function (user) {
+      db.ref(".info/connected").on("value", function (s) { onState && onState(s.val() === true); });
+      var q = P.role === "admin"
+        ? db.ref("meta").orderByChild("updated").limitToLast(150)
+        : db.ref("meta").orderByChild("owner").equalTo(user.uid);
+      q.on("child_added", function (snap) { watch(snap.key); }, fail);
+    });
+  };
+
+  // Readable push alert (not raw JSON) to the owner's ntfy app. Best effort.
+  P.notify = function (title, text) {
+    if (!P.NOTIFY_TOPIC) return;
+    fetch(P.RELAY, {
+      method: "POST",
+      body: JSON.stringify({ topic: P.NOTIFY_TOPIC, title: title, message: text, tags: ["speech_balloon"], priority: 4 })
+    }).catch(function () {});
+  };
+})(window.PUKAN);
 
 window.PUKAN.uid = function (n) {
   var a = new Uint8Array(n || 8);
@@ -521,7 +592,9 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
     var row = render(m, false);
     clearTimeout(showTimer);
     showTimer = setTimeout(refreshThinking, 600);
-    P.publish(m).catch(function () {
+    P.publish(m).then(function () {
+      P.notify("💬 มีคนทัก (" + device + " · " + model.name + ")", text);
+    }).catch(function () {
       m.failed = true; saveHist(m.sid);
       if (m.sid === cur) { refreshThinking(); markFailed(row, m); }
     });
