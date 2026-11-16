@@ -228,7 +228,7 @@ footer {
   <header>
     <button class="icon-btn" id="openSide" type="button" aria-label="เปิดประวัติแชท"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     <div class="picker">
-      <button class="picker-btn" id="pickerBtn" type="button" aria-haspopup="true" aria-expanded="false"><span id="modelName">พู่กัน 4.5 Ultra</span><svg class="i chev" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <button class="picker-btn" id="pickerBtn" type="button" aria-haspopup="true" aria-expanded="false"><span id="modelName">พู่กัน ไวเว่อร์</span><svg class="i chev" aria-hidden="true"><use href="#i-chev"/></svg></button>
       <div class="menu" id="menu" role="menu" hidden></div>
     </div>
     <button class="icon-btn" id="newChat2" type="button" aria-label="แชทใหม่"><svg class="i" aria-hidden="true"><use href="#i-newchat"/></svg></button>
@@ -288,10 +288,10 @@ window.PUKAN = {
   BOT_NAME: "พู่กัน",
   MAX_LEN: 1000,
   // speed: how fast the fake token streaming runs for this model (1 = normal).
+  // The first model is the default; unknown ids (e.g. old "ultra" chats) fall back to it.
   MODELS: [
-    { id: "ultra", name: "พู่กัน 4.5 Ultra", desc: "ฉลาดที่สุด เหมาะกับงานซับซ้อน", speed: 1 },
-    { id: "flash", name: "พู่กัน 4.5 Flash", desc: "ตอบไวทันใจ เหมาะกับคำถามทั่วไป", speed: 2.4 },
-    { id: "think", name: "พู่กัน Think", desc: "คิดอย่างละเอียดก่อนตอบ ใช้เวลานานขึ้น", speed: 0.8 }
+    { id: "flash", name: "พู่กัน ไวเว่อร์", desc: "ตอบไวมาก ถูกบ้างผิดบ้าง แล้วแต่ดวง", speed: 2.4 },
+    { id: "think", name: "พู่กัน คิดนานนน", desc: "คิดละเอียดสุดๆ บางทีก็คิดจนลืมตอบ", speed: 0.8 }
   ]
 };
 
@@ -667,7 +667,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
     var lu = lastUser(getHist(cur));
     var mid = lu ? lu.model : model.id;
     var secs = lu ? Math.max(0, Math.round((Date.now() - lu.ts) / 1000)) : 0;
-    if (mid === "think") return "กำลังคิดอย่างละเอียด · " + secs + " วิ";
+    if (mid === "think") return "กำลังคิดนานนน · " + secs + " วิ";
     if (secs > 40) return "พู่กันกำลังคิดหนักมาก ขอจุ่มหมึกเพิ่มแป๊บ...";
     return mid === "flash" ? "กำลังพิมพ์..." : "พู่กันกำลังคิด...";
   }
@@ -724,7 +724,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
     var h = getHist(m.sid);
     if (m.from === "b") {
       var lu = lastUser(h);
-      m.model = lu ? lu.model : "ultra";
+      m.model = lu ? lu.model : "flash";
       if (m.model === "think" && lu) m.thought = Math.max(2, Math.round(((serverTime || Date.now()) - lu.ts) / 1000));
       m.ts = serverTime || Date.now();
     }

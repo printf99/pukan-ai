@@ -172,10 +172,10 @@ window.PUKAN = {
   BOT_NAME: "พู่กัน",
   MAX_LEN: 1000,
   // speed: how fast the fake token streaming runs for this model (1 = normal).
+  // The first model is the default; unknown ids (e.g. old "ultra" chats) fall back to it.
   MODELS: [
-    { id: "ultra", name: "พู่กัน 4.5 Ultra", desc: "ฉลาดที่สุด เหมาะกับงานซับซ้อน", speed: 1 },
-    { id: "flash", name: "พู่กัน 4.5 Flash", desc: "ตอบไวทันใจ เหมาะกับคำถามทั่วไป", speed: 2.4 },
-    { id: "think", name: "พู่กัน Think", desc: "คิดอย่างละเอียดก่อนตอบ ใช้เวลานานขึ้น", speed: 0.8 }
+    { id: "flash", name: "พู่กัน ไวเว่อร์", desc: "ตอบไวมาก ถูกบ้างผิดบ้าง แล้วแต่ดวง", speed: 2.4 },
+    { id: "think", name: "พู่กัน คิดนานนน", desc: "คิดละเอียดสุดๆ บางทีก็คิดจนลืมตอบ", speed: 0.8 }
   ]
 };
 
@@ -332,7 +332,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
 
   function sess(m) {
     if (!sessions.has(m.sid)) {
-      sessions.set(m.sid, { sid: m.sid, uid: m.uid || m.sid, title: "", msgs: [], first: Infinity, last: 0, unread: 0, dev: "", model: "ultra" });
+      sessions.set(m.sid, { sid: m.sid, uid: m.uid || m.sid, title: "", msgs: [], first: Infinity, last: 0, unread: 0, dev: "", model: "flash" });
     }
     var s = sessions.get(m.sid);
     if (m.uid && m.from === "u") s.uid = m.uid;
@@ -405,7 +405,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
     $("chatSub").textContent = person(s.uid) + (s.dev ? " · ใช้" + s.dev : "") + " · ล่าสุด " + hhmm(s.last);
     $("modelPill").hidden = false;
     $("modelPill").textContent = "ถามด้วย " + P.model(s.model).name;
-    $("modelPill").title = s.model === "think" ? "โหมด Think: ตอบช้าได้ ฝั่งผู้ใช้จะโชว์ว่าพู่กันคิดอยู่กี่วินาที" : "";
+    $("modelPill").title = s.model === "think" ? "โหมดคิดนาน: ตอบช้าได้ ฝั่งผู้ใช้จะโชว์ว่าพู่กันคิดอยู่กี่วินาที" : "";
     th.innerHTML = "";
     s.msgs.forEach(function (m) {
       var d = document.createElement("div");
