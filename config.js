@@ -4,7 +4,19 @@ window.PUKAN = {
   TOPIC: "pukan-ai-b9d8b2b623e586bd",
   RELAY: "https://ntfy.sh/",
   BOT_NAME: "พู่กัน",
-  MAX_LEN: 1000
+  MAX_LEN: 1000,
+  // speed: how fast the fake token streaming runs for this model (1 = normal).
+  MODELS: [
+    { id: "ultra", name: "พู่กัน 4.5 Ultra", desc: "ฉลาดที่สุด เหมาะกับงานซับซ้อน", speed: 1 },
+    { id: "flash", name: "พู่กัน 4.5 Flash", desc: "ตอบไวทันใจ เหมาะกับคำถามทั่วไป", speed: 2.4 },
+    { id: "think", name: "พู่กัน Think", desc: "คิดอย่างละเอียดก่อนตอบ ใช้เวลานานขึ้น", speed: 0.8 }
+  ]
+};
+
+window.PUKAN.model = function (id) {
+  var list = window.PUKAN.MODELS;
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  return list[0];
 };
 
 window.PUKAN.publish = function (msg) {
@@ -56,3 +68,6 @@ window.PUKAN.fmt = function (s) {
     return /^[-•] /.test(line) ? "<span class=\"li\">" + line.slice(2) + "</span>" : line;
   }).join("<br>");
 };
+
+window.PUKAN.store = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } };

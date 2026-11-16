@@ -9,78 +9,89 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
 <style>
-/* Layout: inbox list on the left, conversation on the right; phones show one at a time. */
+/* Layout: inbox of chats on the left, the selected chat on the right; phones show one at a time. */
 :root {
   --bg: #f3f4f8; --surface: #ffffff; --ink: #171a24; --muted: #687089; --line: #e2e5ee;
-  --accent: #2b3bd1; --accent-soft: #e8eafd; --gold: #e9a91c; --ok: #1f9d55; --danger: #c2372f;
+  --accent: #2b3bd1; --accent-soft: #e8eafd; --bot: #2b3bd1; --gold: #b7791f; --ok: #1f9d55; --danger: #c2372f;
   --f-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0f1117; --surface: #181b24; --ink: #e9ebf3; --muted: #8b92a8; --line: #272b37;
-    --accent: #8f9bff; --accent-soft: #1f2440; --gold: #f2c14e; --ok: #4ade80; --danger: #ff7b72; color-scheme: dark; }
+    --accent: #8f9bff; --accent-soft: #1f2440; --bot: #3341d6; --gold: #f2c14e; --ok: #4ade80; --danger: #ff7b72; color-scheme: dark; }
 }
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); display: flex; flex-direction: column; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); display: flex; flex-direction: column; overflow: hidden; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .top {
-  display: flex; align-items: center; gap: 10px; background: var(--surface); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; background: var(--surface); border-bottom: 1px solid var(--line); flex: none;
   padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
 }
-.top h1 { font: 600 18px/1 var(--f-display); margin: 0; }
-.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.top h1 { font: 600 18px/1 var(--f-display); margin: 0; white-space: nowrap; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; white-space: nowrap; }
 .spacer { flex: 1; }
-.conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
 .conn.on .dot { background: var(--ok); }
-.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 12px; font-size: 13px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 12px; font-size: 13px; white-space: nowrap; }
 .btn:hover { border-color: var(--accent); }
 
-.app { flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 0; }
-.inbox { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); }
+.app { flex: 1; display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 0; }
+.inbox { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); min-height: 0; }
 .empty-inbox { padding: 28px 20px; color: var(--muted); font-size: 14px; display: grid; gap: 8px; }
 .empty-inbox strong { color: var(--ink); }
-.empty-inbox code { word-break: break-all; background: var(--accent-soft); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
-.item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%;
-  text-align: left; padding: 12px 16px; border: 0; border-bottom: 1px solid var(--line); background: none; }
-.item:hover { background: var(--bg); }
+.linkbox { word-break: break-all; background: var(--accent-soft); padding: 6px 10px; border-radius: 8px; font-size: 13px; color: var(--ink); }
+.item { position: relative; border-bottom: 1px solid var(--line); }
 .item.active { background: var(--accent-soft); }
-.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 600 14px var(--f-display); }
-.item .name { font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.item .main { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 12px 16px; border: 0; background: none; }
+.item:not(.active) .main:hover { background: var(--bg); }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 600 13px var(--f-display); }
+.item .who { font-size: 12px; color: var(--muted); display: flex; gap: 6px; }
+.item .title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item .prev { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item .meta { display: grid; justify-items: end; gap: 4px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .badge { background: var(--danger); color: #fff; border-radius: 999px; min-width: 20px; padding: 0 6px; text-align: center; font-weight: 600; }
 .waiting { font-size: 11px; color: var(--gold); font-weight: 600; }
+.hide { position: absolute; right: 8px; bottom: 6px; border: 0; background: var(--surface); color: var(--muted); font-size: 12px; border-radius: 6px; padding: 0 6px; opacity: 0; }
+.item:hover .hide, .hide:focus-visible { opacity: 1; }
+.hide:hover { color: var(--danger); }
+.hidden-note { padding: 10px 16px; font-size: 12px; color: var(--muted); }
+.hidden-note button { border: 0; background: none; color: var(--accent); padding: 0; font-size: 12px; text-decoration: underline; }
 
 .chat { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.chat-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.chat-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); flex: none; min-width: 0; }
+.chat-head .t { min-width: 0; flex: 1; }
+.chat-head .t b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-head .sub { color: var(--muted); font-size: 13px; }
+.model-pill { flex: none; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 10px; background: var(--accent-soft); color: var(--accent); }
 .back { display: none; }
-.thread { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+.thread { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 .msg { max-width: 75%; padding: 8px 14px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .msg.u { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-.msg.b { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
-.msg time { display: block; font-size: 11px; opacity: .65; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.msg.b time { text-align: right; }
+.msg.b { align-self: flex-end; background: var(--bot); color: #fff; border-bottom-right-radius: 4px; }
+.msg .info { display: block; font-size: 11px; opacity: .7; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.msg.b .info { text-align: right; }
 .placeholder { margin: auto; color: var(--muted); text-align: center; padding: 20px; }
 
-.quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 0; scrollbar-width: none; }
-.quick button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.composer { flex: none; border-top: 1px solid var(--line); background: var(--surface);
+  padding-block: 8px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 8px; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 3px 12px; font-size: 13px; max-width: 100%; text-align: left; }
 .quick button:hover { border-color: var(--accent); }
-.reply { display: flex; gap: 8px; align-items: flex-end;
-  padding-block: 8px calc(12px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.reply textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
-  background: var(--surface); color: var(--ink); font: inherit; max-height: 200px; outline: none; }
+.reply { display: flex; gap: 8px; align-items: flex-end; }
+.reply textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 14px; padding: 9px 14px; line-height: 1.5;
+  background: var(--bg); color: var(--ink); font: inherit; max-height: 200px; outline: none; overflow-y: hidden; display: block; }
 .reply textarea:focus { border-color: var(--accent); }
-.reply .send { border: 0; background: var(--accent); color: #fff; border-radius: 12px; padding: 10px 18px; font-weight: 600; }
+.reply .send { border: 0; background: var(--bot); color: #fff; border-radius: 12px; padding: 0 18px; height: 42px; font-weight: 600; flex: none; }
 .reply .send:disabled { opacity: .4; cursor: default; }
-.hint { font-size: 12px; color: var(--muted); padding: 0 16px; }
-.err { color: var(--danger); font-size: 13px; padding: 0 16px; }
+.hint { font-size: 12px; color: var(--muted); }
+.err { color: var(--danger); font-size: 13px; }
 
 @media (max-width: 760px) {
   .app { grid-template-columns: minmax(0, 1fr); }
@@ -88,6 +99,9 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
   .app:not(.open) .chat { display: none; }
   .back { display: inline-flex; }
   .msg { max-width: 88%; }
+  .conn span:last-child { display: none; }
+  .hint { display: none; }
+  .hide { opacity: 1; }
 }
 </style>
 </head>
@@ -96,36 +110,41 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
   <h1>พู่กัน AI</h1><span class="tag">หลังบ้าน</span>
   <div class="spacer"></div>
   <div class="conn" id="conn"><span class="dot"></span><span id="connText">กำลังเชื่อมต่อ</span></div>
-  <button class="btn" id="soundBtn" type="button">🔔 เปิดเสียงแจ้งเตือน</button>
+  <button class="btn" id="soundBtn" type="button">🔕 เปิดเสียงเตือน</button>
 </div>
 
 <div class="app" id="app">
   <aside class="inbox" id="inbox">
     <div class="empty-inbox" id="emptyInbox">
       <strong>ยังไม่มีใครทักมา</strong>
-      <span>ส่งลิงก์หน้าแชทให้เพื่อน แล้วรอข้อความเด้งเข้ามาตรงนี้ (เก็บย้อนหลัง 12 ชั่วโมง)</span>
-      <code id="publicLink"></code>
+      <span>ส่งลิงก์นี้ให้เพื่อน แล้วรอข้อความเด้งเข้ามาตรงนี้ (เก็บย้อนหลัง 12 ชั่วโมง)</span>
+      <span class="linkbox" id="publicLink"></span>
     </div>
+    <div id="items"></div>
+    <div class="hidden-note" id="hiddenNote" hidden></div>
   </aside>
   <section class="chat">
     <div class="chat-head">
       <button class="btn back" id="back" type="button">← กลับ</button>
-      <div><div id="chatName"><b>เลือกแชททางซ้าย</b></div><div class="sub" id="chatSub"></div></div>
+      <div class="t"><b id="chatName">เลือกแชททางซ้าย</b><div class="sub" id="chatSub"></div></div>
+      <span class="model-pill" id="modelPill" hidden></span>
     </div>
     <div class="thread" id="thread"><div class="placeholder">เลือกแชทเพื่อเริ่มตอบในนามพู่กัน</div></div>
-    <div class="quick" id="quick" hidden>
-      <button type="button">ขออภัยครับ คำถามนี้ละเอียดอ่อนเกินกว่าที่พู่กันจะตอบได้</button>
-      <button type="button">คำถามที่ดีมากครับ! ขอเวลาพู่กันประมวลผลสักครู่นะครับ</button>
-      <button type="button">ตามข้อมูลที่พู่กันได้รับการฝึกมา คำตอบคือ... ไม่ทราบครับ</button>
-      <button type="button">ระบบมีผู้ใช้งานหนาแน่น กรุณาลองใหม่อีกครั้งภายหลัง</button>
-      <button type="button">ในฐานะ AI พู่กันไม่มีความรู้สึก แต่ถ้ามี ตอนนี้คงเหนื่อยมาก</button>
+    <div class="composer" id="composer" hidden>
+      <div class="quick" id="quick">
+        <button type="button">คำถามที่ดีมากครับ! ขอเวลาพู่กันประมวลผลสักครู่นะครับ</button>
+        <button type="button">ขออภัยครับ คำถามนี้ละเอียดอ่อนเกินกว่าที่พู่กันจะตอบได้</button>
+        <button type="button">ตามข้อมูลที่พู่กันได้รับการฝึกมา คำตอบคือ... ไม่ทราบครับ</button>
+        <button type="button">ระบบมีผู้ใช้งานหนาแน่น กรุณาลองใหม่อีกครั้งภายหลัง</button>
+        <button type="button">ในฐานะ AI พู่กันไม่มีความรู้สึก แต่ถ้ามี ตอนนี้คงเหนื่อยมาก</button>
+      </div>
+      <div class="err" id="err" hidden></div>
+      <form class="reply" id="form">
+        <textarea id="input" rows="1" placeholder="พิมพ์คำตอบในนามพู่กัน..." maxlength="1000" aria-label="คำตอบ"></textarea>
+        <button class="send" id="send" type="submit" disabled>ตอบ</button>
+      </form>
+      <div class="hint">Enter ส่ง · Shift+Enter ขึ้นบรรทัดใหม่ · ใช้ **ตัวหนา** และขึ้นบรรทัดด้วย "- " เป็นหัวข้อได้</div>
     </div>
-    <div class="err" id="err" hidden></div>
-    <form class="reply" id="form" hidden>
-      <textarea id="input" rows="1" placeholder="พิมพ์คำตอบในนามพู่กัน..." maxlength="1000" aria-label="คำตอบ"></textarea>
-      <button class="send" id="send" type="submit" disabled>ตอบ</button>
-    </form>
-    <div class="hint" id="hint" hidden>Enter ส่ง · Shift+Enter ขึ้นบรรทัดใหม่ · ใช้ **ตัวหนา** และขึ้นบรรทัดด้วย "- " เป็นหัวข้อได้</div>
   </section>
 </div>
 
@@ -134,107 +153,156 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
 (function () {
   var P = window.PUKAN;
   var $ = function (id) { return document.getElementById(id); };
-  var sessions = new Map(), seen = new Set(), current = null, soundOn = false, audioCtx = null;
-  var typingSentFor = null;
-  var baseTitle = document.title;
+  var sessions = new Map(), seen = new Set(), current = null, soundOn = false, audioCtx = null, typingSentFor = null;
+  var hiddenChats = new Set(P.load("pukan_admin_hidden") || []);
+  var baseTitle = document.title, loadedAt = Date.now();
   var palette = ["#2b3bd1", "#c2372f", "#1f9d55", "#b4690e", "#7c3aed", "#0e7490", "#be185d"];
 
   $("publicLink").textContent = location.href.replace(/admin-[^/]*\.html.*$/, "");
 
-  function sess(sid) {
-    if (!sessions.has(sid)) {
-      var h = parseInt(sid.slice(0, 4), 16) || 0;
-      sessions.set(sid, { sid: sid, name: "ผู้ใช้ #" + sid.slice(0, 4).toUpperCase(), color: palette[h % palette.length],
-        msgs: [], last: 0, unread: 0, dev: "" });
+  function sess(m) {
+    if (!sessions.has(m.sid)) {
+      sessions.set(m.sid, { sid: m.sid, uid: m.uid || m.sid, title: "", msgs: [], first: Infinity, last: 0, unread: 0, dev: "", model: "ultra" });
     }
-    return sessions.get(sid);
+    var s = sessions.get(m.sid);
+    if (m.uid && m.from === "u") s.uid = m.uid;
+    return s;
   }
+  function person(uid) { return "ผู้ใช้ #" + uid.slice(0, 4).toUpperCase(); }
+  function color(uid) { return palette[(parseInt(uid.slice(0, 4), 16) || 0) % palette.length]; }
   function hhmm(t) { return new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); }
   function ago(t) {
     var s = Math.round((Date.now() - t) / 1000);
     if (s < 60) return "เมื่อกี้"; if (s < 3600) return Math.floor(s / 60) + " นาที"; return Math.floor(s / 3600) + " ชม.";
   }
+  // Which of this person's chats this is (1st, 2nd, ...), by start time.
+  function chatNo(s) {
+    var mine = Array.from(sessions.values()).filter(function (x) { return x.uid === s.uid; })
+      .sort(function (a, b) { return a.first - b.first; });
+    return { n: mine.indexOf(s) + 1, total: mine.length };
+  }
 
   function renderInbox() {
-    var list = Array.from(sessions.values()).sort(function (a, b) { return b.last - a.last; });
+    var all = Array.from(sessions.values()).sort(function (a, b) { return b.last - a.last; });
+    var list = all.filter(function (s) { return !hiddenChats.has(s.sid); });
     $("emptyInbox").hidden = list.length > 0;
-    Array.from($("inbox").querySelectorAll(".item")).forEach(function (n) { n.remove(); });
+    var box = $("items");
+    box.innerHTML = "";
     var total = 0;
     list.forEach(function (s) {
       total += s.unread;
       var lastMsg = s.msgs[s.msgs.length - 1];
       var needsReply = lastMsg && lastMsg.from === "u";
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "item" + (current === s.sid ? " active" : "");
-      b.innerHTML = '<div class="av" style="background:' + s.color + '">' + P.esc(s.sid.slice(0, 2).toUpperCase()) + '</div>' +
-        '<div style="min-width:0"><div class="name">' + P.esc(s.name) + (s.dev ? ' <span style="font-weight:400;color:var(--muted);font-size:12px">' + P.esc(s.dev) + '</span>' : '') + '</div>' +
-        '<div class="prev">' + (lastMsg ? (lastMsg.from === "b" ? "พู่กัน: " : "") + P.esc(lastMsg.text) : "") + '</div></div>' +
-        '<div class="meta"><span>' + ago(s.last) + '</span>' + (s.unread ? '<span class="badge">' + s.unread + '</span>' : (needsReply ? '<span class="waiting">รอตอบ</span>' : '')) + '</div>';
-      b.onclick = function () { open(s.sid); };
-      $("inbox").appendChild(b);
+      var no = chatNo(s);
+      var item = document.createElement("div");
+      item.className = "item" + (current === s.sid ? " active" : "");
+      item.innerHTML =
+        '<button type="button" class="main">' +
+          '<div class="av" style="background:' + color(s.uid) + '">' + P.esc(s.uid.slice(0, 2).toUpperCase()) + '</div>' +
+          '<div style="min-width:0">' +
+            '<div class="who"><span>' + P.esc(person(s.uid)) + '</span>' + (no.total > 1 ? '<span>· แชท ' + no.n + '/' + no.total + '</span>' : '') + (s.dev ? '<span>· ' + P.esc(s.dev) + '</span>' : '') + '</div>' +
+            '<div class="title">' + P.esc(s.title || "(ไม่มีหัวข้อ)") + '</div>' +
+            '<div class="prev">' + (lastMsg ? (lastMsg.from === "b" ? "คุณ: " : "") + P.esc(lastMsg.text) : "") + '</div>' +
+          '</div>' +
+          '<div class="meta"><span>' + ago(s.last) + '</span>' + (s.unread ? '<span class="badge">' + s.unread + '</span>' : (needsReply ? '<span class="waiting">รอตอบ</span>' : '')) + '</div>' +
+        '</button>' +
+        '<button type="button" class="hide" title="ซ่อนแชทนี้จากรายการ">ซ่อน</button>';
+      item.querySelector(".main").onclick = function () { open(s.sid); };
+      item.querySelector(".hide").onclick = function () { hideChat(s.sid); };
+      box.appendChild(item);
     });
+    var hiddenCount = all.length - list.length;
+    $("hiddenNote").hidden = !hiddenCount;
+    if (hiddenCount) {
+      $("hiddenNote").innerHTML = "ซ่อนไว้ " + hiddenCount + " แชท · <button type=\"button\">แสดงทั้งหมด</button>";
+      $("hiddenNote").querySelector("button").onclick = function () { hiddenChats.clear(); P.store("pukan_admin_hidden", []); renderInbox(); };
+    }
     document.title = total ? "(" + total + ") " + baseTitle : baseTitle;
   }
 
-  function renderThread() {
+  function hideChat(sid) {
+    hiddenChats.add(sid);
+    P.store("pukan_admin_hidden", Array.from(hiddenChats));
+    if (current === sid) closeChat();
+    renderInbox();
+  }
+
+  function renderThread(forceBottom) {
     var s = sessions.get(current), th = $("thread");
     if (!s) return;
-    $("chatName").innerHTML = "<b>" + P.esc(s.name) + "</b>";
-    $("chatSub").textContent = (s.dev ? "ใช้" + s.dev + " · " : "") + "ล่าสุด " + hhmm(s.last);
-    var nearBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 80;
+    var nearBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
+    $("chatName").textContent = s.title || person(s.uid);
+    $("chatSub").textContent = person(s.uid) + (s.dev ? " · ใช้" + s.dev : "") + " · ล่าสุด " + hhmm(s.last);
+    $("modelPill").hidden = false;
+    $("modelPill").textContent = "ถามด้วย " + P.model(s.model).name;
+    $("modelPill").title = s.model === "think" ? "โหมด Think: ตอบช้าได้ ฝั่งผู้ใช้จะโชว์ว่าพู่กันคิดอยู่กี่วินาที" : "";
     th.innerHTML = "";
     s.msgs.forEach(function (m) {
       var d = document.createElement("div");
       d.className = "msg " + m.from;
       d.textContent = m.text;
-      var t = document.createElement("time"); t.textContent = hhmm(m.time);
-      d.appendChild(t);
+      var info = document.createElement("span");
+      info.className = "info";
+      info.textContent = hhmm(m.time) + (m.from === "u" && m.model ? " · " + P.model(m.model).name : "");
+      d.appendChild(info);
       th.appendChild(d);
     });
-    if (nearBottom || true) th.scrollTop = th.scrollHeight;
+    if (forceBottom || nearBottom) th.scrollTop = th.scrollHeight;
   }
 
   function open(sid) {
     current = sid;
-    var s = sessions.get(sid); s.unread = 0;
+    sessions.get(sid).unread = 0;
     $("app").classList.add("open");
-    $("form").hidden = $("quick").hidden = $("hint").hidden = false;
+    $("composer").hidden = false;
+    $("err").hidden = true;
     typingSentFor = null;
-    renderInbox(); renderThread();
+    renderInbox(); renderThread(true);
     if (window.matchMedia("(min-width: 761px)").matches) $("input").focus();
   }
-  $("back").onclick = function () { $("app").classList.remove("open"); current = null; renderInbox(); };
+  function closeChat() {
+    current = null;
+    $("app").classList.remove("open");
+    $("composer").hidden = true; $("modelPill").hidden = true;
+    $("chatName").textContent = "เลือกแชททางซ้าย"; $("chatSub").textContent = "";
+    $("thread").innerHTML = '<div class="placeholder">เลือกแชทเพื่อเริ่มตอบในนามพู่กัน</div>';
+    renderInbox();
+  }
+  $("back").onclick = closeChat;
 
   function ding() {
     if (!soundOn || !audioCtx) return;
-    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = "sine"; o.frequency.value = 880; o.frequency.setValueAtTime(1320, audioCtx.currentTime + .09);
-    g.gain.setValueAtTime(.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .35);
-    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + .36);
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime;
+    o.type = "sine"; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(1320, t + .09);
+    g.gain.setValueAtTime(.15, t); g.gain.exponentialRampToValueAtTime(.001, t + .35);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(t + .36);
   }
   $("soundBtn").onclick = function () {
     soundOn = !soundOn;
     if (soundOn && !audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
-    this.textContent = soundOn ? "🔔 เสียงเปิดอยู่" : "🔕 เปิดเสียงแจ้งเตือน";
+    this.textContent = soundOn ? "🔔 เสียงเตือนเปิดอยู่" : "🔕 เปิดเสียงเตือน";
     if (soundOn) ding();
   };
 
-  var loadedAt = Date.now();
   P.subscribe(function (m, time) {
     if (m.k !== "msg" || seen.has(m.id)) return;
     seen.add(m.id);
-    var s = sess(m.sid);
-    s.msgs.push({ id: m.id, from: m.from === "b" ? "b" : "u", text: String(m.text || ""), time: time || m.ts });
+    var s = sess(m);
+    var t = time || m.ts;
+    s.msgs.push({ id: m.id, from: m.from === "b" ? "b" : "u", text: String(m.text || ""), time: t, model: m.model });
     s.msgs.sort(function (a, b) { return a.time - b.time; });
-    s.last = Math.max(s.last, time || m.ts);
+    s.last = Math.max(s.last, t);
+    s.first = Math.min(s.first, t);
     if (m.dev) s.dev = m.dev;
     if (m.from === "u") {
-      if (current !== m.sid || document.hidden) s.unread++;
-      if (time > loadedAt - 2000) ding();
+      if (m.model) s.model = m.model;
+      if (!s.title) s.title = String(m.title || m.text || "").replace(/\s+/g, " ").slice(0, 60);
+      var live = t > loadedAt - 2000;
+      if (live && (current !== m.sid || document.hidden)) s.unread++;
+      if (live) { ding(); if (hiddenChats.delete(m.sid)) P.store("pukan_admin_hidden", Array.from(hiddenChats)); }
     }
     renderInbox();
-    if (current === m.sid) renderThread();
+    if (current === m.sid) renderThread(m.from === "b");
   }, function (on) {
     $("conn").classList.toggle("on", on);
     $("connText").textContent = on ? "ออนไลน์" : "กำลังเชื่อมต่อใหม่";
@@ -245,37 +313,47 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
   });
   setInterval(renderInbox, 30000);
 
+  var input = $("input");
+  function autosize() {
+    input.style.height = "auto";
+    var h = input.scrollHeight + 2; // + top/bottom border, so no scrollbar at one line
+    input.style.height = Math.min(h, 200) + "px";
+    input.style.overflowY = h > 200 ? "auto" : "hidden";
+  }
+
   function reply(text) {
     text = text.trim().slice(0, P.MAX_LEN);
     if (!text || !current) return;
-    var m = { v: 1, k: "msg", sid: current, from: "b", id: P.uid(8), text: text, ts: Date.now() };
+    var s = sessions.get(current);
+    var m = { v: 1, k: "msg", sid: current, uid: s.uid, from: "b", id: P.uid(8), text: text, ts: Date.now() };
     $("send").disabled = true;
     $("err").hidden = true;
     P.publish(m).then(function () {
-      $("input").value = ""; autosize(); typingSentFor = null;
+      input.value = ""; autosize(); typingSentFor = null;
     }).catch(function () {
       $("err").textContent = "ส่งไม่สำเร็จ (อาจเกินโควตา 250 ข้อความต่อวันของ ntfy.sh) ลองอีกครั้ง";
       $("err").hidden = false;
-    }).then(function () { $("send").disabled = !$("input").value.trim(); });
+    }).then(function () { $("send").disabled = !input.value.trim(); });
   }
 
-  // One "typing" event per reply so the visitor sees the thinking dots without spending the quota.
+  // One "typing" event per reply: the visitor sees the thinking dots without spending the daily quota.
   function maybeTyping() {
     if (!current || typingSentFor === current) return;
     typingSentFor = current;
-    P.publish({ v: 1, k: "typing", sid: current, from: "b", id: P.uid(8), ts: Date.now() }).catch(function () {});
+    var s = sessions.get(current);
+    P.publish({ v: 1, k: "typing", sid: current, uid: s.uid, from: "b", id: P.uid(8), ts: Date.now() }).catch(function () {});
   }
 
-  var input = $("input");
-  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
   input.addEventListener("input", function () { autosize(); $("send").disabled = !input.value.trim(); if (input.value.trim()) maybeTyping(); });
   input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); reply(input.value); }
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && window.matchMedia("(hover: hover)").matches) { e.preventDefault(); reply(input.value); }
   });
   $("form").addEventListener("submit", function (e) { e.preventDefault(); reply(input.value); });
   $("quick").addEventListener("click", function (e) {
-    if (e.target.tagName === "BUTTON") { input.value = e.target.textContent; autosize(); $("send").disabled = false; input.focus(); }
+    var b = e.target.closest("button");
+    if (b) { input.value = b.textContent; autosize(); $("send").disabled = false; input.focus(); }
   });
+  autosize();
 })();
 </script>
 </body>

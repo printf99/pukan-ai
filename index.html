@@ -5,146 +5,158 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>พู่กัน AI</title>
 <meta name="description" content="พู่กัน AI ผู้ช่วยอัจฉริยะที่ตอบได้ทุกเรื่อง (มั้ง)">
-<meta name="theme-color" content="#f5f6fa">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232b3bd1'/%3E%3Cpath d='M44 12c3 0 6 3 5 6L32 38l-6-5 15-19c1-1 2-2 3-2z' fill='%23fff'/%3E%3Cpath d='M24 36l6 5c-1 7-7 11-14 10 3-2 3-5 3-8 0-4 2-6 5-7z' fill='%23ffd166'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
 <style>
-/* Layout: one centered conversation column, fixed composer at the bottom. */
+/* Layout: chat-history sidebar on the left, conversation column on the right; the sidebar becomes a drawer on phones. */
 :root {
-  --bg: #f5f6fa;
-  --surface: #ffffff;
-  --ink: #171a24;
-  --muted: #687089;
-  --line: #e2e5ee;
-  --accent: #2b3bd1;
-  --accent-soft: #e8eafd;
-  --gold: #e9a91c;
-  --user-bubble: #2b3bd1;
-  --user-ink: #ffffff;
-  --danger: #c2372f;
+  --bg: #f5f6fa; --side: #eceef5; --surface: #ffffff; --ink: #171a24; --muted: #687089; --line: #e0e3ec;
+  --accent: #2b3bd1; --accent-soft: #e4e7fc; --gold: #e9a91c; --user-bubble: #2b3bd1; --user-ink: #ffffff;
+  --danger: #c2372f; --shadow: rgba(23, 26, 60, .18);
   --f-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1117; --surface: #181b24; --ink: #e9ebf3; --muted: #8b92a8; --line: #272b37;
-    --accent: #8f9bff; --accent-soft: #1f2440; --gold: #f2c14e; --user-bubble: #3341d6; --user-ink: #ffffff;
-    --danger: #ff7b72; color-scheme: dark;
+    --bg: #0f1117; --side: #0a0c11; --surface: #1a1d27; --ink: #e9ebf3; --muted: #8b92a8; --line: #262a36;
+    --accent: #8f9bff; --accent-soft: #222848; --gold: #f2c14e; --user-bubble: #3341d6; --user-ink: #ffffff;
+    --danger: #ff7b72; --shadow: rgba(0, 0, 0, .5); color-scheme: dark;
   }
 }
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  background: var(--bg); color: var(--ink); font: 16px/1.65 var(--f-body);
-  display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;
+  background: var(--bg); color: var(--ink); font: 16px/1.65 var(--f-body); -webkit-font-smoothing: antialiased;
+  display: grid; grid-template-columns: 272px minmax(0, 1fr); overflow: hidden;
 }
-button { font: inherit; color: inherit; cursor: pointer; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
 button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Sidebar */
+.side {
+  background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.brand { display: flex; align-items: center; gap: 10px; font: 600 20px/1 var(--f-display); padding: 4px 6px 14px; }
+.logo { width: 32px; height: 32px; flex: none; }
+.close-side { margin-left: auto; display: none; width: 34px; height: 34px; border-radius: 10px; font-size: 20px; color: var(--muted); }
+.new-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line); font-weight: 500;
+}
+.new-btn:hover { border-color: var(--accent); }
+.list-label { font-size: 12px; color: var(--muted); letter-spacing: .4px; padding: 18px 8px 6px; }
+.chatlist { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: 2px; min-height: 0; }
+.ci { display: flex; align-items: center; border-radius: 10px; min-width: 0; }
+.ci:hover, .ci.active { background: var(--accent-soft); }
+.ci .open { flex: 1; min-width: 0; text-align: left; padding: 8px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+.ci .new-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; margin-right: 6px; }
+.ci .del { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); opacity: 0; flex: none; margin-right: 4px; }
+.ci:hover .del, .ci.active .del, .ci .del:focus-visible { opacity: 1; }
+.ci .del:hover { color: var(--danger); }
+.empty-list { font-size: 13px; color: var(--muted); padding: 4px 8px; }
+.plan { display: flex; align-items: center; gap: 10px; padding: 10px 8px 2px; border-top: 1px solid var(--line); margin-top: 8px; font-size: 13px; }
+.plan .me { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font: 600 13px var(--f-display); }
+.plan small { display: block; color: var(--muted); font-size: 12px; }
+.backdrop { display: none; }
+
+/* Main */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
 header {
-  display: flex; align-items: center; gap: 12px;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
-  border-bottom: 1px solid var(--line); background: var(--bg);
+  display: flex; align-items: center; gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px 16px;
 }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 600; font-size: 20px; letter-spacing: .2px; }
-.logo { width: 34px; height: 34px; flex: none; }
-.model {
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--surface); font-size: 13px; color: var(--muted);
+.icon-btn { width: 38px; height: 38px; border-radius: 10px; display: none; place-items: center; font-size: 18px; }
+.icon-btn:hover { background: var(--accent-soft); }
+.picker { position: relative; }
+.picker-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font: 600 17px var(--f-display); }
+.picker-btn:hover, .picker-btn[aria-expanded="true"] { background: var(--accent-soft); }
+.picker-btn .chev { font-size: 12px; color: var(--muted); transition: transform .15s; }
+.picker-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(340px, calc(100vw - 32px));
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px;
+  box-shadow: 0 16px 40px -12px var(--shadow);
 }
-.model b { color: var(--ink); font-weight: 600; }
-.spacer { flex: 1; }
-.icon-btn {
-  border: 1px solid var(--line); background: var(--surface); border-radius: 10px;
-  padding: 7px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;
-}
-.icon-btn:hover { border-color: var(--accent); }
+.menu .head { font-size: 12px; color: var(--muted); padding: 8px 12px 4px; }
+.opt { display: grid; grid-template-columns: minmax(0, 1fr) 22px; gap: 2px 8px; align-items: center; width: 100%; text-align: left; padding: 10px 12px; border-radius: 12px; }
+.opt:hover { background: var(--accent-soft); }
+.opt b { font-weight: 600; }
+.opt span { grid-column: 1; color: var(--muted); font-size: 13px; }
+.opt .check { grid-row: 1 / span 2; grid-column: 2; color: var(--accent); font-weight: 700; visibility: hidden; }
+.opt.sel .check { visibility: visible; }
+.pro { font-size: 11px; font-weight: 600; color: var(--gold); border: 1px solid currentColor; border-radius: 6px; padding: 0 5px; margin-left: 6px; vertical-align: 2px; }
 
-main { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
-.col { max-width: 760px; margin: 0 auto; padding-block: 24px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { flex: 1; overflow-y: auto; min-height: 0; }
+.col { max-width: 760px; margin: 0 auto; padding-block: 16px 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-.welcome { padding-top: 6vh; text-align: center; display: grid; gap: 14px; justify-items: center; }
-.welcome .logo { width: 64px; height: 64px; }
-.welcome h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(26px, 5vw, 34px); margin: 0; text-wrap: balance; line-height: 1.3; }
+.welcome { padding-top: 8vh; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.welcome .logo { width: 60px; height: 60px; }
+.welcome h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(24px, 4.5vw, 32px); margin: 0; text-wrap: balance; line-height: 1.3; }
 .welcome p { margin: 0; color: var(--muted); max-width: 46ch; }
 .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 620px; margin-top: 18px; }
-.chip {
-  text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line);
-  background: var(--surface); display: grid; gap: 2px; min-width: 0;
-}
+.chip { text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); display: grid; gap: 2px; min-width: 0; }
 .chip:hover { border-color: var(--accent); }
 .chip strong { font-weight: 600; font-size: 15px; }
 .chip span { color: var(--muted); font-size: 13px; }
 
 .msgs { display: grid; gap: 22px; }
 .row { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
-.row.u { justify-content: flex-end; }
+.row.u { flex-direction: column; align-items: flex-end; }
 .avatar { width: 30px; height: 30px; flex: none; margin-top: 2px; }
 .bubble { min-width: 0; overflow-wrap: anywhere; }
-.row.u .bubble {
-  background: var(--user-bubble); color: var(--user-ink); padding: 10px 16px;
-  border-radius: 20px 20px 6px 20px; max-width: 80%; white-space: pre-wrap;
-}
+.row.u .bubble { background: var(--user-bubble); color: var(--user-ink); padding: 10px 16px; border-radius: 20px 20px 6px 20px; max-width: 80%; white-space: pre-wrap; }
 .row.b .bubble { padding-top: 3px; flex: 1; }
 .row.u.failed .bubble { opacity: .55; }
-.fail { font-size: 12px; color: var(--danger); text-align: right; margin-top: 4px; }
-.fail button { border: 0; background: none; color: var(--danger); text-decoration: underline; padding: 0; }
+.fail { font-size: 12px; color: var(--danger); }
+.fail button { color: var(--danger); text-decoration: underline; padding: 0; }
 .bubble code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; }
 .bubble .li { display: block; padding-left: 1.2em; text-indent: -1.1em; }
 .bubble .li::before { content: "• "; color: var(--accent); }
-.tools { display: flex; gap: 4px; margin-top: 6px; color: var(--muted); }
-.tools button { border: 0; background: none; padding: 4px 6px; border-radius: 6px; font-size: 13px; color: var(--muted); }
+.thought { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; margin-bottom: 8px; }
+.tools { display: flex; gap: 2px; margin-top: 6px; }
+.tools button { padding: 4px 8px; border-radius: 8px; font-size: 13px; color: var(--muted); }
 .tools button:hover { background: var(--accent-soft); color: var(--ink); }
+.tools button.on { color: var(--accent); }
 .caret::after { content: "▍"; color: var(--accent); animation: blink 1s steps(2) infinite; }
 
-.thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; padding-top: 4px; }
+.thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; padding-top: 4px; font-variant-numeric: tabular-nums; }
 .ink { display: inline-flex; gap: 5px; }
 .ink i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: drip 1.2s ease-in-out infinite; }
 .ink i:nth-child(2) { animation-delay: .15s; }
 .ink i:nth-child(3) { animation-delay: .3s; }
-.shimmer {
-  background: linear-gradient(90deg, var(--muted) 30%, var(--ink) 50%, var(--muted) 70%);
-  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: shine 2s linear infinite;
-}
+.shimmer { background: linear-gradient(90deg, var(--muted) 30%, var(--ink) 50%, var(--muted) 70%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 2s linear infinite; }
 @keyframes drip { 0%, 100% { transform: translateY(0); opacity: .35; } 40% { transform: translateY(-5px); opacity: 1; } }
 @keyframes shine { to { background-position: -200% 0; } }
 @keyframes blink { 50% { opacity: 0; } }
 
 footer {
-  padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-block: 6px calc(10px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: var(--bg);
 }
-.composer {
-  max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 8px 8px 8px 18px;
-  box-shadow: 0 6px 24px -12px rgba(23, 26, 60, .25);
-}
+.composer { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 8px 8px 8px 18px; box-shadow: 0 6px 24px -14px var(--shadow); }
 .composer:focus-within { border-color: var(--accent); }
-textarea {
-  flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent; color: var(--ink);
-  font: inherit; line-height: 1.5; max-height: 180px; padding: 7px 0;
-}
-textarea::placeholder { color: var(--muted); }
-.send {
-  width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent); color: #fff;
-  display: grid; place-items: center; flex: none;
-}
+.composer textarea { flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; max-height: 180px; padding: 7px 0; overflow-y: hidden; }
+.composer textarea::placeholder { color: var(--muted); }
+.send { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
 .send:disabled { opacity: .35; cursor: default; }
 .disclaimer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
 
-@media (max-width: 520px) {
-  .chips { grid-template-columns: minmax(0, 1fr); }
-  .model { display: none; }
-  .icon-btn span { display: none; }
+@media (max-width: 820px) {
+  body { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); z-index: 50; transform: translateX(-102%); transition: transform .22s ease; box-shadow: 0 0 40px var(--shadow); }
+  body.drawer .side { transform: none; }
+  body.drawer .backdrop { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .4); }
+  .close-side, .icon-btn { display: grid; }
+  header { padding-left: max(8px, env(safe-area-inset-left, 0px)); }
+  .picker { margin-right: auto; }
 }
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; scroll-behavior: auto !important; }
-}
+@media (max-width: 520px) { .chips { grid-template-columns: minmax(0, 1fr); } .chip:nth-child(n+3) { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -156,39 +168,52 @@ textarea::placeholder { color: var(--muted); }
   </symbol>
 </svg>
 
-<header>
-  <div class="brand"><svg class="logo"><use href="#pukan"/></svg>พู่กัน AI</div>
-  <div class="model">โมเดล <b>พู่กัน 4.5 Ultra</b> ▾</div>
-  <div class="spacer"></div>
-  <button class="icon-btn" id="newChat" type="button" title="เริ่มแชทใหม่">✎ <span>แชทใหม่</span></button>
-</header>
+<aside class="side" id="side">
+  <div class="brand"><svg class="logo"><use href="#pukan"/></svg>พู่กัน AI<button class="close-side" id="closeSide" type="button" aria-label="ปิดเมนู">×</button></div>
+  <button class="new-btn" id="newChat" type="button"><span aria-hidden="true">＋</span> แชทใหม่</button>
+  <div class="list-label">ประวัติแชท</div>
+  <nav class="chatlist" id="chatlist" aria-label="ประวัติแชท"></nav>
+  <div class="plan"><div class="me" id="meAv">?</div><div>ผู้ใช้ทั่วไป<small>แพ็กเกจฟรี · ข้อความไม่จำกัด</small></div></div>
+</aside>
+<div class="backdrop" id="backdrop"></div>
 
-<main id="scroller">
-  <div class="col">
-    <section class="welcome" id="welcome">
-      <svg class="logo"><use href="#pukan"/></svg>
-      <h1>สวัสดีครับ วันนี้ให้พู่กันช่วยอะไรดี?</h1>
-      <p>ถามได้ทุกเรื่อง ตั้งแต่การบ้าน สูตรอาหาร ไปจนถึงความหมายของชีวิต</p>
-      <div class="chips" id="chips">
-        <button class="chip" type="button" data-q="ช่วยแต่งกลอนรักสั้นๆ ให้หน่อย"><strong>แต่งกลอนรัก</strong><span>สั้นๆ เอาไปส่งให้คนพิเศษ</span></button>
-        <button class="chip" type="button" data-q="วางแผนเที่ยวเชียงใหม่ 3 วัน 2 คืน งบ 5,000 บาท"><strong>วางแผนเที่ยวเชียงใหม่</strong><span>3 วัน 2 คืน งบ 5,000 บาท</span></button>
-        <button class="chip" type="button" data-q="อธิบายควอนตัมคอมพิวเตอร์ให้เด็ก 5 ขวบเข้าใจ"><strong>อธิบายควอนตัม</strong><span>แบบเด็ก 5 ขวบเข้าใจ</span></button>
-        <button class="chip" type="button" data-q="เที่ยงนี้กินอะไรดี"><strong>เที่ยงนี้กินอะไรดี</strong><span>คำถามที่ยากที่สุดของมนุษยชาติ</span></button>
-      </div>
-    </section>
-    <div class="msgs" id="msgs"></div>
-  </div>
-</main>
+<div class="main">
+  <header>
+    <button class="icon-btn" id="openSide" type="button" aria-label="เปิดประวัติแชท">☰</button>
+    <div class="picker">
+      <button class="picker-btn" id="pickerBtn" type="button" aria-haspopup="true" aria-expanded="false"><span id="modelName">พู่กัน 4.5 Ultra</span><span class="chev">▼</span></button>
+      <div class="menu" id="menu" role="menu" hidden></div>
+    </div>
+    <button class="icon-btn" id="newChat2" type="button" aria-label="แชทใหม่">✎</button>
+  </header>
 
-<footer>
-  <form class="composer" id="form">
-    <textarea id="input" rows="1" placeholder="ถามพู่กันได้เลย..." maxlength="1000" aria-label="ข้อความถึงพู่กัน"></textarea>
-    <button class="send" id="send" type="submit" disabled aria-label="ส่ง">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-    </button>
-  </form>
-  <div class="disclaimer">พู่กันอาจให้ข้อมูลผิดพลาดได้ โปรดตรวจสอบคำตอบที่สำคัญ</div>
-</footer>
+  <main id="scroller">
+    <div class="col">
+      <section class="welcome" id="welcome">
+        <svg class="logo"><use href="#pukan"/></svg>
+        <h1>สวัสดีครับ วันนี้ให้พู่กันช่วยอะไรดี?</h1>
+        <p>ถามได้ทุกเรื่อง ตั้งแต่การบ้าน สูตรอาหาร ไปจนถึงความหมายของชีวิต</p>
+        <div class="chips" id="chips">
+          <button class="chip" type="button" data-q="ช่วยแต่งกลอนรักสั้นๆ ให้หน่อย"><strong>แต่งกลอนรัก</strong><span>สั้นๆ เอาไปส่งให้คนพิเศษ</span></button>
+          <button class="chip" type="button" data-q="เที่ยงนี้กินอะไรดี"><strong>เที่ยงนี้กินอะไรดี</strong><span>คำถามที่ยากที่สุดของมนุษยชาติ</span></button>
+          <button class="chip" type="button" data-q="วางแผนเที่ยวเชียงใหม่ 3 วัน 2 คืน งบ 5,000 บาท"><strong>วางแผนเที่ยวเชียงใหม่</strong><span>3 วัน 2 คืน งบ 5,000 บาท</span></button>
+          <button class="chip" type="button" data-q="อธิบายควอนตัมคอมพิวเตอร์ให้เด็ก 5 ขวบเข้าใจ"><strong>อธิบายควอนตัม</strong><span>แบบเด็ก 5 ขวบเข้าใจ</span></button>
+        </div>
+      </section>
+      <div class="msgs" id="msgs"></div>
+    </div>
+  </main>
+
+  <footer>
+    <form class="composer" id="form">
+      <textarea id="input" rows="1" placeholder="ถามพู่กันได้เลย..." maxlength="1000" aria-label="ข้อความถึงพู่กัน"></textarea>
+      <button class="send" id="send" type="submit" disabled aria-label="ส่ง">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </form>
+    <div class="disclaimer">พู่กันอาจให้ข้อมูลผิดพลาดได้ โปรดตรวจสอบคำตอบที่สำคัญ</div>
+  </footer>
+</div>
 
 <script src="config.js"></script>
 <script>
@@ -197,72 +222,167 @@ textarea::placeholder { color: var(--muted); }
   var $ = function (id) { return document.getElementById(id); };
   var msgsEl = $("msgs"), input = $("input"), sendBtn = $("send"), scroller = $("scroller");
   var pageStart = Date.now();
-  var sid, history, seen, waiting = false, typingUntil = 0, thinkingEl = null, waitTimer = null, slowTimer = null;
-
-  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
-  function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } }
   var device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "มือถือ" : "คอม";
 
-  function startSession(newOne) {
-    sid = (!newOne && load("pukan_sid")) || P.uid(6);
-    store("pukan_sid", sid);
-    history = load("pukan_hist_" + sid) || [];
-    seen = new Set(history.map(function (m) { return m.id; }));
-    msgsEl.innerHTML = "";
-    waiting = false; typingUntil = 0; hideThinking();
-    history.forEach(function (m) { render(m, false); });
-    // If the last message is ours and unanswered, keep the "thinking" state up.
-    var last = history[history.length - 1];
-    if (last && last.from === "u" && !last.failed) { waiting = true; refreshThinking(); }
-    $("welcome").hidden = history.length > 0;
+  // ---- identity, chats and history (kept in this browser) ----
+  var me = P.load("pukan_uid");
+  if (!me) { me = P.uid(6); P.store("pukan_uid", me); }
+  $("meAv").textContent = me.slice(0, 1).toUpperCase();
+
+  var chats = P.load("pukan_chats") || [];
+  var legacy = P.load("pukan_sid");
+  if (!chats.length && legacy) {
+    var lh = P.load("pukan_hist_" + legacy) || [];
+    var firstU = lh.filter(function (m) { return m.from === "u"; })[0];
+    if (firstU) chats.push({ sid: legacy, title: firstU.text.slice(0, 48), updated: lh[lh.length - 1].ts || Date.now() });
   }
+  var deleted = P.load("pukan_deleted") || [];
+  var histCache = {};
+  var seen = new Set();
+  chats.forEach(function (c) { getHist(c.sid).forEach(function (m) { seen.add(m.id); }); });
 
-  function saveHistory() { store("pukan_hist_" + sid, history.slice(-200)); }
+  var model = P.model(P.load("pukan_model"));
+  var cur = null, thinkingEl = null, thinkTick = null, showTimer = null;
+  var typingUntil = {};
 
+  function getHist(sid) {
+    if (!histCache[sid]) histCache[sid] = P.load("pukan_hist_" + sid) || [];
+    return histCache[sid];
+  }
+  function saveHist(sid) { P.store("pukan_hist_" + sid, getHist(sid).slice(-200)); }
+  function saveChats() { chats.sort(function (a, b) { return b.updated - a.updated; }); chats = chats.slice(0, 40); P.store("pukan_chats", chats); }
+  function chatOf(sid) { for (var i = 0; i < chats.length; i++) if (chats[i].sid === sid) return chats[i]; return null; }
   function scrollDown() { scroller.scrollTop = scroller.scrollHeight; }
+  function lastUser(h) { for (var i = h.length - 1; i >= 0; i--) if (h[i].from === "u") return h[i]; return null; }
+
+  // ---- sidebar ----
+  function renderList() {
+    var el = $("chatlist");
+    el.innerHTML = "";
+    if (!chats.length) { el.innerHTML = '<div class="empty-list">ยังไม่มีแชท เริ่มถามอะไรสักอย่างได้เลย</div>'; return; }
+    chats.forEach(function (c) {
+      var row = document.createElement("div");
+      row.className = "ci" + (c.sid === cur ? " active" : "");
+      var open = document.createElement("button");
+      open.type = "button"; open.className = "open"; open.textContent = c.title; open.title = c.title;
+      open.onclick = function () { openChat(c.sid); };
+      row.appendChild(open);
+      if (c.unread) { var d = document.createElement("span"); d.className = "new-dot"; d.title = "มีคำตอบใหม่"; row.appendChild(d); }
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "ลบแชท " + c.title);
+      del.onclick = function () { removeChat(c.sid); };
+      row.appendChild(del);
+      el.appendChild(row);
+    });
+  }
+  function removeChat(sid) {
+    deleted.push(sid); P.store("pukan_deleted", deleted.slice(-100));
+    chats = chats.filter(function (c) { return c.sid !== sid; });
+    try { localStorage.removeItem("pukan_hist_" + sid); } catch (_) {}
+    delete histCache[sid];
+    saveChats();
+    if (sid === cur) newChat(); else renderList();
+  }
+  function setDrawer(open) { document.body.classList.toggle("drawer", open); }
+  $("openSide").onclick = function () { setDrawer(true); };
+  $("closeSide").onclick = $("backdrop").onclick = function () { setDrawer(false); };
+
+  // ---- model picker ----
+  function renderMenu() {
+    var m = $("menu");
+    m.innerHTML = '<div class="head">เลือกโมเดล</div>';
+    P.MODELS.forEach(function (x) {
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("role", "menuitemradio"); b.setAttribute("aria-checked", x.id === model.id);
+      b.className = "opt" + (x.id === model.id ? " sel" : "");
+      b.innerHTML = "<b>" + P.esc(x.name) + (x.id === "think" ? '<span class="pro">ใหม่</span>' : "") + "</b><i class=\"check\">✓</i><span>" + P.esc(x.desc) + "</span>";
+      b.onclick = function () { model = x; P.store("pukan_model", x.id); $("modelName").textContent = x.name; toggleMenu(false); input.focus(); };
+      m.appendChild(b);
+    });
+  }
+  function toggleMenu(open) {
+    if (open) renderMenu();
+    $("menu").hidden = !open;
+    $("pickerBtn").setAttribute("aria-expanded", open);
+  }
+  $("pickerBtn").onclick = function (e) { e.stopPropagation(); toggleMenu($("menu").hidden); };
+  document.addEventListener("click", function (e) { if (!e.target.closest(".picker")) toggleMenu(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { toggleMenu(false); setDrawer(false); } });
+  $("modelName").textContent = model.name;
+
+  // ---- conversation ----
+  function openChat(sid) {
+    cur = sid;
+    P.store("pukan_cur", sid);
+    var c = chatOf(sid);
+    if (c && c.unread) { c.unread = false; saveChats(); }
+    msgsEl.innerHTML = ""; thinkingEl = null; stopTick();
+    var h = getHist(sid);
+    h.forEach(function (m) { render(m, false); });
+    $("welcome").hidden = h.length > 0;
+    refreshThinking();
+    renderList();
+    setDrawer(false);
+    scrollDown();
+  }
+  function newChat() {
+    var sid = P.uid(6);
+    openChat(sid);
+    input.focus();
+  }
 
   function render(m, animate) {
     var row = document.createElement("div");
     row.className = "row " + (m.from === "u" ? "u" : "b");
     if (m.from === "u") {
       var b = document.createElement("div");
-      b.className = "bubble";
-      b.textContent = m.text;
+      b.className = "bubble"; b.textContent = m.text;
       row.appendChild(b);
       if (m.failed) markFailed(row, m);
     } else {
-      row.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="bubble"><div class="text"></div></div>';
-      var t = row.querySelector(".text");
-      if (animate) typeOut(t, m.text, row); else { t.innerHTML = P.fmt(m.text); addTools(row, m.text); }
+      row.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="bubble"></div>';
+      var bub = row.querySelector(".bubble");
+      if (m.thought) {
+        var t = document.createElement("div");
+        t.className = "thought"; t.textContent = "คิดอยู่ " + fmtSecs(m.thought);
+        bub.appendChild(t);
+      }
+      var txt = document.createElement("div");
+      bub.appendChild(txt);
+      if (animate) typeOut(txt, m.text, bub, P.model(m.model).speed); else { txt.innerHTML = P.fmt(m.text); addTools(bub, m.text); }
     }
-    msgsEl.insertBefore(row, thinkingEl && thinkingEl.parentNode === msgsEl ? thinkingEl : null);
+    msgsEl.insertBefore(row, thinkingEl);
     scrollDown();
     return row;
   }
+  function fmtSecs(s) { return s < 60 ? s + " วินาที" : Math.floor(s / 60) + " นาที " + (s % 60) + " วินาที"; }
 
-  function addTools(row, text) {
+  function addTools(bub, text) {
     var tools = document.createElement("div");
     tools.className = "tools";
-    tools.innerHTML = '<button type="button" title="คัดลอก">⧉ คัดลอก</button><button type="button" title="ชอบ">👍</button><button type="button" title="ไม่ชอบ">👎</button>';
+    tools.innerHTML = '<button type="button">⧉ คัดลอก</button><button type="button" aria-label="ชอบ">👍</button><button type="button" aria-label="ไม่ชอบ">👎</button>';
     var copy = tools.children[0];
     copy.onclick = function () {
-      var done = function () { copy.textContent = "✓ คัดลอกแล้ว"; setTimeout(function () { copy.textContent = "⧉ คัดลอก"; }, 1500); };
-      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(text).then(function () {
+        copy.textContent = "✓ คัดลอกแล้ว";
+        setTimeout(function () { copy.textContent = "⧉ คัดลอก"; }, 1500);
+      }, function () {});
     };
-    tools.children[1].onclick = tools.children[2].onclick = function () { this.style.color = "var(--accent)"; };
-    row.querySelector(".bubble").appendChild(tools);
+    tools.children[1].onclick = tools.children[2].onclick = function () { this.classList.toggle("on"); };
+    bub.appendChild(tools);
   }
 
   // Fake token streaming so a hand-typed answer looks generated.
-  function typeOut(el, text, row) {
+  function typeOut(el, text, bub, speed) {
     var chars = Array.from(text), i = 0;
     el.classList.add("caret");
     (function step() {
-      i = Math.min(chars.length, i + 2 + Math.floor(Math.random() * 4));
+      i = Math.min(chars.length, i + Math.ceil((2 + Math.random() * 3) * speed));
       el.innerHTML = P.fmt(chars.slice(0, i).join(""));
       scrollDown();
-      if (i < chars.length) setTimeout(step, 18 + Math.random() * 40);
-      else { el.classList.remove("caret"); addTools(row, text); }
+      if (i < chars.length) setTimeout(step, (18 + Math.random() * 40) / Math.max(1, speed / 1.5));
+      else { el.classList.remove("caret"); addTools(bub, text); }
     })();
   }
 
@@ -272,88 +392,121 @@ textarea::placeholder { color: var(--muted); }
     f.innerHTML = 'ส่งไม่สำเร็จ <button type="button">ลองส่งอีกครั้ง</button>';
     row.classList.add("failed");
     row.appendChild(f);
-    row.style.flexDirection = "column"; row.style.alignItems = "flex-end";
     f.querySelector("button").onclick = function () {
       row.remove();
-      history = history.filter(function (x) { return x.id !== m.id; });
+      var h = getHist(m.sid);
+      h.splice(h.indexOf(m), 1);
+      saveHist(m.sid);
       seen.delete(m.id);
       send(m.text);
     };
   }
 
+  // ---- "thinking" indicator ----
+  function waiting() {
+    var h = getHist(cur), last = h[h.length - 1];
+    return !!(last && last.from === "u" && !last.failed);
+  }
+  function stopTick() { clearInterval(thinkTick); thinkTick = null; }
+  function thinkingText() {
+    var lu = lastUser(getHist(cur));
+    var mid = lu ? lu.model : model.id;
+    var secs = lu ? Math.max(0, Math.round((Date.now() - lu.ts) / 1000)) : 0;
+    if (mid === "think") return "กำลังคิดอย่างละเอียด · " + secs + " วิ";
+    if (secs > 40) return "พู่กันกำลังคิดหนักมาก ขอจุ่มหมึกเพิ่มแป๊บ...";
+    return mid === "flash" ? "กำลังพิมพ์..." : "พู่กันกำลังคิด...";
+  }
   function showThinking() {
-    if (thinkingEl) return;
-    thinkingEl = document.createElement("div");
-    thinkingEl.className = "row b";
-    thinkingEl.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="thinking"><span class="ink"><i></i><i></i><i></i></span><span class="shimmer" id="thinkText">พู่กันกำลังคิด...</span></div>';
-    msgsEl.appendChild(thinkingEl);
-    scrollDown();
-    clearTimeout(slowTimer);
-    slowTimer = setTimeout(function () {
-      var t = document.getElementById("thinkText");
-      if (t) t.textContent = "พู่กันกำลังคิดหนักมาก กำลังจุ่มหมึกเพิ่ม...";
-    }, 40000);
+    if (!thinkingEl) {
+      thinkingEl = document.createElement("div");
+      thinkingEl.className = "row b";
+      thinkingEl.innerHTML = '<svg class="avatar"><use href="#pukan"/></svg><div class="thinking"><span class="ink"><i></i><i></i><i></i></span><span class="shimmer"></span></div>';
+      msgsEl.appendChild(thinkingEl);
+      scrollDown();
+    }
+    thinkingEl.querySelector(".shimmer").textContent = thinkingText();
+    if (!thinkTick) thinkTick = setInterval(function () { if (thinkingEl) thinkingEl.querySelector(".shimmer").textContent = thinkingText(); }, 1000);
   }
-  function hideThinking() {
-    clearTimeout(slowTimer);
-    if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
-  }
+  function hideThinking() { stopTick(); if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; } }
   function refreshThinking() {
-    if (waiting || Date.now() < typingUntil) showThinking(); else hideThinking();
+    if (waiting() || Date.now() < (typingUntil[cur] || 0)) showThinking(); else hideThinking();
   }
 
+  // ---- sending and receiving ----
   function send(text) {
     text = text.trim().slice(0, P.MAX_LEN);
     if (!text) return;
     $("welcome").hidden = true;
-    var m = { v: 1, k: "msg", sid: sid, from: "u", id: P.uid(8), text: text, ts: Date.now(), dev: device };
+    var c = chatOf(cur);
+    if (!c) { c = { sid: cur, title: text.replace(/\s+/g, " ").slice(0, 48), updated: Date.now() }; chats.push(c); }
+    c.updated = Date.now(); saveChats(); renderList();
+    var m = { v: 1, k: "msg", sid: cur, uid: me, from: "u", id: P.uid(8), text: text, ts: Date.now(), dev: device, model: model.id, title: c.title };
     seen.add(m.id);
-    history.push(m); saveHistory();
+    getHist(cur).push(m); saveHist(cur);
     var row = render(m, false);
-    waiting = true;
-    clearTimeout(waitTimer);
-    waitTimer = setTimeout(refreshThinking, 600);
+    clearTimeout(showTimer);
+    showTimer = setTimeout(refreshThinking, 600);
     P.publish(m).catch(function () {
-      m.failed = true; saveHistory();
-      waiting = false; refreshThinking();
-      markFailed(row, m);
+      m.failed = true; saveHist(m.sid);
+      if (m.sid === cur) { refreshThinking(); markFailed(row, m); }
     });
   }
 
   P.subscribe(function (m, serverTime) {
-    if (m.sid !== sid) return;
+    var c = chatOf(m.sid);
+    if ((!c && m.uid !== me) || deleted.indexOf(m.sid) !== -1) return;
     if (m.k === "typing" && m.from === "b") {
-      if (Date.now() - serverTime < 15000) { typingUntil = Date.now() + 15000; refreshThinking(); setTimeout(refreshThinking, 15100); }
+      if (Date.now() - serverTime < 20000) {
+        typingUntil[m.sid] = Date.now() + 20000;
+        if (m.sid === cur) { refreshThinking(); setTimeout(refreshThinking, 20100); }
+      }
       return;
     }
     if (m.k !== "msg" || seen.has(m.id)) return;
     seen.add(m.id);
-    history.push(m); saveHistory();
-    $("welcome").hidden = true;
+    var h = getHist(m.sid);
     if (m.from === "b") {
-      waiting = false; typingUntil = 0; hideThinking();
-      render(m, serverTime > pageStart - 3000);
-    } else {
-      render(m, false);
+      var lu = lastUser(h);
+      m.model = lu ? lu.model : "ultra";
+      if (m.model === "think" && lu) m.thought = Math.max(2, Math.round(((serverTime || Date.now()) - lu.ts) / 1000));
+      m.ts = serverTime || Date.now();
     }
+    h.push(m); saveHist(m.sid);
+    if (!c) { c = { sid: m.sid, title: (m.title || m.text || "แชท").slice(0, 48), updated: m.ts }; chats.push(c); }
+    c.updated = Math.max(c.updated, m.ts || 0);
+    if (m.sid === cur) {
+      $("welcome").hidden = true;
+      if (m.from === "b") { typingUntil[cur] = 0; hideThinking(); render(m, serverTime > pageStart - 3000); }
+      else render(m, false);
+    } else if (m.from === "b") {
+      c.unread = true;
+    }
+    saveChats(); renderList();
   });
 
+  // ---- composer ----
+  function autosize() {
+    input.style.height = "auto";
+    var h = input.scrollHeight;
+    input.style.height = Math.min(h, 180) + "px";
+    input.style.overflowY = h > 180 ? "auto" : "hidden";
+  }
   $("form").addEventListener("submit", function (e) {
     e.preventDefault();
     send(input.value);
     input.value = ""; autosize(); sendBtn.disabled = true;
   });
   input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); }
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && window.matchMedia("(hover: hover)").matches) { e.preventDefault(); $("form").requestSubmit(); }
   });
-  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 180) + "px"; }
   input.addEventListener("input", function () { autosize(); sendBtn.disabled = !input.value.trim(); });
-  $("chips").addEventListener("click", function (e) {
-    var c = e.target.closest(".chip"); if (c) send(c.dataset.q);
-  });
-  $("newChat").onclick = function () { startSession(true); input.focus(); };
+  $("chips").addEventListener("click", function (e) { var c = e.target.closest(".chip"); if (c) send(c.dataset.q); });
+  $("newChat").onclick = $("newChat2").onclick = newChat;
 
-  startSession(false);
+  saveChats();
+  var startSid = P.load("pukan_cur");
+  window.addEventListener("pagehide", function () { P.store("pukan_cur", chatOf(cur) ? cur : null); });
+  if (startSid && chatOf(startSid)) openChat(startSid); else openChat(P.uid(6));
 })();
 </script>
 </body>
