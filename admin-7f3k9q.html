@@ -142,7 +142,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
       </div>
       <div class="err" id="err" hidden></div>
       <form class="reply" id="form">
-        <textarea id="input" rows="1" placeholder="พิมพ์คำตอบในนามพู่กัน..." maxlength="1000" aria-label="คำตอบ"></textarea>
+        <textarea id="input" rows="1" placeholder="ตอบในนามพู่กัน (ใช้ ## หัวข้อ, **ตัวหนา**, - รายการ, ```โค้ด``` ได้)" maxlength="1000" aria-label="คำตอบ"></textarea>
         <button class="send" id="send" type="submit" disabled>ตอบ</button>
       </form>
       <div class="hint">Enter ส่ง · Shift+Enter ขึ้นบรรทัดใหม่ · ใช้ **ตัวหนา** และขึ้นบรรทัดด้วย "- " เป็นหัวข้อได้</div>
@@ -288,14 +288,32 @@ window.PUKAN.esc = function (s) {
   });
 };
 
-// Tiny formatter: **bold**, `code`, line breaks, and "- " bullet lines.
+// Markdown-ish formatter for bot answers: # headings, **bold**, *italic*, `code`, ```code blocks```,
+// "- " bullets, "1. " numbered lists, "> " quotes and "---" rules. Escapes first, so it is safe for any text.
 window.PUKAN.fmt = function (s) {
-  var html = window.PUKAN.esc(s)
-    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-  return html.split("\n").map(function (line) {
-    return /^[-•] /.test(line) ? "<span class=\"li\">" + line.slice(2) + "</span>" : line;
-  }).join("<br>");
+  var esc = window.PUKAN.esc;
+  function inline(t) {
+    return esc(t)
+      .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\s][^*\n]*)\*/g, "$1<em>$2</em>");
+  }
+  return String(s).split("```").map(function (part, i) {
+    if (i % 2) {
+      var nl = part.indexOf("\n"), lang = nl < 0 ? "" : part.slice(0, nl).trim(), code = nl < 0 ? part : part.slice(nl + 1);
+      return '<div class="codeblock"><div class="cb-head"><span>' + esc(lang || "code") + '</span><button type="button" class="cb-copy">คัดลอกโค้ด</button></div><pre><code>' + esc(code.replace(/\n$/, "")) + "</code></pre></div>";
+    }
+    return part.replace(/^\n|\n$/g, "").split("\n").map(function (line) {
+      var m;
+      if (!line.trim()) return '<div class="gap"></div>';
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(line))) return '<div class="h h' + m[1].length + '">' + inline(m[2]) + "</div>";
+      if (/^(-{3,}|_{3,})$/.test(line.trim())) return "<hr>";
+      if ((m = /^\s*(\d+)[.)]\s+(.*)$/.exec(line))) return '<div class="li ol"><b>' + m[1] + '.</b><span>' + inline(m[2]) + "</span></div>";
+      if ((m = /^\s*[-•*]\s+(.*)$/.exec(line))) return '<div class="li"><b>•</b><span>' + inline(m[1]) + "</span></div>";
+      if ((m = /^>\s?(.*)$/.exec(line))) return '<div class="quote">' + inline(m[1]) + "</div>";
+      return "<div>" + inline(line) + "</div>";
+    }).join("");
+  }).join("");
 };
 
 window.PUKAN.store = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };

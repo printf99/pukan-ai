@@ -43,19 +43,21 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
 }
 .brand { display: flex; align-items: center; gap: 10px; font: 600 20px/1 var(--f-display); padding: 4px 6px 14px; }
 .logo { width: 32px; height: 32px; flex: none; }
-.close-side { margin-left: auto; display: none; width: 34px; height: 34px; border-radius: 10px; font-size: 20px; color: var(--muted); }
+.close-side { margin-left: auto; display: none; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--muted); }
 .new-btn {
   display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--line); font-weight: 500;
 }
 .new-btn:hover { border-color: var(--accent); }
+.new-btn .i { width: 18px; height: 18px; }
 .list-label { font-size: 12px; color: var(--muted); letter-spacing: .4px; padding: 18px 8px 6px; }
 .chatlist { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: 2px; min-height: 0; }
 .ci { display: flex; align-items: center; border-radius: 10px; min-width: 0; }
 .ci:hover, .ci.active { background: var(--accent-soft); }
 .ci .open { flex: 1; min-width: 0; text-align: left; padding: 8px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
 .ci .new-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; margin-right: 6px; }
-.ci .del { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); opacity: 0; flex: none; margin-right: 4px; }
+.ci .del { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); opacity: 0; flex: none; margin-right: 4px; display: grid; place-items: center; }
+.ci .del .i { width: 16px; height: 16px; }
 .ci:hover .del, .ci.active .del, .ci .del:focus-visible { opacity: 1; }
 .ci .del:hover { color: var(--danger); }
 .empty-list { font-size: 13px; color: var(--muted); padding: 4px 8px; }
@@ -70,13 +72,13 @@ header {
   display: flex; align-items: center; gap: 8px;
   padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px 16px;
 }
-.icon-btn { width: 38px; height: 38px; border-radius: 10px; display: none; place-items: center; font-size: 18px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 12px; display: none; place-items: center; color: var(--ink); }
+.icon-btn .i { width: 22px; height: 22px; }
 .icon-btn:hover { background: var(--accent-soft); }
 .picker { position: relative; }
-.picker-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 12px; font: 600 16px var(--f-display); border: 1px solid var(--line); background: var(--surface); }
-.picker-btn .lbl { font: 400 13px var(--f-body); color: var(--muted); }
-.picker-btn:hover, .picker-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.picker-btn .chev { font-size: 11px; color: var(--accent); transition: transform .15s; }
+.picker-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px 7px 12px; border-radius: 12px; font: 600 17px var(--f-display); }
+.picker-btn:hover, .picker-btn[aria-expanded="true"] { background: var(--accent-soft); }
+.picker-btn .chev { width: 16px; height: 16px; color: var(--muted); transition: transform .15s; }
 .picker-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .menu {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(340px, calc(100vw - 32px));
@@ -115,15 +117,40 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
 .row.u.failed .bubble { opacity: .55; }
 .fail { font-size: 12px; color: var(--danger); }
 .fail button { color: var(--danger); text-decoration: underline; padding: 0; }
-.bubble code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; }
-.bubble .li { display: block; padding-left: 1.2em; text-indent: -1.1em; }
-.bubble .li::before { content: "• "; color: var(--accent); }
-.thought { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; margin-bottom: 8px; }
-.tools { display: flex; gap: 2px; margin-top: 6px; }
-.tools button { padding: 4px 8px; border-radius: 8px; font-size: 13px; color: var(--muted); }
+.bubble code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .88em; background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; }
+.row.b .bubble .gap { height: .7em; }
+.row.b .bubble .h { font-family: var(--f-display); font-weight: 600; line-height: 1.35; margin: .5em 0 .25em; }
+.row.b .bubble .h1 { font-size: 1.3em; } .row.b .bubble .h2 { font-size: 1.15em; } .row.b .bubble .h3 { font-size: 1.03em; }
+.row.b .bubble .h:first-child { margin-top: 0; }
+.row.b .bubble .li { display: flex; gap: .55em; padding-left: .2em; margin: .15em 0; }
+.row.b .bubble .li > b { color: var(--accent); flex: none; min-width: .8em; font-weight: 600; }
+.row.b .bubble .li.ol > b { min-width: 1.2em; }
+.row.b .bubble .quote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--muted); }
+.row.b .bubble hr { border: 0; border-top: 1px solid var(--line); margin: .8em 0; }
+.codeblock { margin: .6em 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--side); }
+.cb-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
+.cb-head button { font-size: 12px; color: var(--muted); padding: 2px 6px; border-radius: 6px; }
+.cb-head button:hover { color: var(--ink); background: var(--accent-soft); }
+.codeblock pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.55; }
+.codeblock pre code { background: none; padding: 0; font-size: inherit; }
+.thought { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.thought svg { width: 15px; height: 15px; color: var(--accent); }
+.tools { display: flex; gap: 2px; margin-top: 8px; margin-left: -6px; opacity: 0; animation: fadein .3s ease forwards; }
+.tools button { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); }
+.tools button svg { width: 17px; height: 17px; }
 .tools button:hover { background: var(--accent-soft); color: var(--ink); }
 .tools button.on { color: var(--accent); }
-.caret::after { content: "▍"; color: var(--accent); animation: blink 1s steps(2) infinite; }
+.tools button.on svg { fill: currentColor; fill-opacity: .18; }
+.cur { display: inline-block; width: .55em; height: .55em; margin-left: 3px; border-radius: 50%; background: var(--ink); vertical-align: middle; animation: pulse 1s ease-in-out infinite; }
+.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.toast { position: fixed; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 8px); z-index: 60; background: var(--ink); color: var(--bg); font-size: 14px; padding: 9px 16px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.jump { position: absolute; left: 50%; top: -48px; transform: translateX(-50%); width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; box-shadow: 0 6px 18px -8px var(--shadow); color: var(--ink); }
+.jump .i { width: 18px; height: 18px; }
+.c-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); flex: none; }
+.c-btn:hover { background: var(--accent-soft); color: var(--ink); }
+@keyframes pulse { 0%, 100% { transform: scale(.75); opacity: .6; } 50% { transform: scale(1); opacity: 1; } }
+@keyframes fadein { to { opacity: 1; } }
 
 .thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; padding-top: 4px; font-variant-numeric: tabular-nums; }
 .ink { display: inline-flex; gap: 5px; }
@@ -136,17 +163,19 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
 @keyframes blink { 50% { opacity: 0; } }
 
 footer {
+  position: relative;
   padding-block: 6px calc(10px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.composer { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 8px 8px 8px 18px; box-shadow: 0 6px 24px -14px var(--shadow); }
+.composer { max-width: 760px; margin: 0 auto; display: flex; gap: 4px; align-items: flex-end; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 6px 6px 6px 6px; box-shadow: 0 6px 24px -14px var(--shadow); }
 .composer:focus-within { border-color: var(--accent); }
-.composer textarea { flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; max-height: 180px; padding: 7px 0; overflow-y: hidden; }
+.composer textarea { flex: 1; min-width: 0; border: 0; outline: none; resize: none; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; max-height: 180px; padding: 8px 4px; overflow-y: hidden; }
 .composer textarea::placeholder { color: var(--muted); }
-.send { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
+.send { width: 36px; height: 36px; margin: 0 0 0 2px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; flex: none; }
 .send:disabled { opacity: .35; cursor: default; }
 .disclaimer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
 
+@media (hover: none) { .ci .del { opacity: .7; } }
 @media (max-width: 820px) {
   body { grid-template-columns: minmax(0, 1fr); }
   .side { position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); z-index: 50; transform: translateX(-102%); transition: transform .22s ease; box-shadow: 0 0 40px var(--shadow); }
@@ -154,7 +183,8 @@ footer {
   body.drawer .backdrop { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .4); }
   .close-side, .icon-btn { display: grid; }
   header { padding-left: max(8px, env(safe-area-inset-left, 0px)); }
-  .picker { margin-right: auto; }
+  .picker { margin: 0 auto; }
+  .menu { left: 50%; transform: translateX(-50%); }
 }
 @media (max-width: 520px) { .chips { grid-template-columns: minmax(0, 1fr); } .chip:nth-child(n+3) { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -167,11 +197,27 @@ footer {
     <path d="M45 11c3.2 0 6.2 3.3 4.8 6.4L32.5 38.2l-6.3-5.1 15.4-19.6c.9-1.2 2-2.5 3.4-2.5z" fill="#fff"/>
     <path d="M25 35.4l6.2 5c-.8 7.4-7.3 11.8-15 10.5 3-2.1 3.3-5 3.3-8 0-4.4 2.5-6.6 5.5-7.5z" fill="var(--gold)"/>
   </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+  <symbol id="i-newchat" viewBox="0 0 24 24"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.4 2.6a2 2 0 0 1 2.9 2.9L12.5 14.3 9 15l.7-3.5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 10v10H4V10zM7 10l4-7a2.6 2.6 0 0 1 3 2.6V9h5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 20H7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M17 14V4h3v10zM17 14l-4 7a2.6 2.6 0 0 1-3-2.6V15H5a2 2 0 0 1-2-2.3l1.3-7A2 2 0 0 1 6.3 4H17"/></symbol>
+  <symbol id="i-speak" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-retry" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrowdown" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
 </svg>
 
 <aside class="side" id="side">
-  <div class="brand"><svg class="logo"><use href="#pukan"/></svg>พู่กัน AI<button class="close-side" id="closeSide" type="button" aria-label="ปิดเมนู">×</button></div>
-  <button class="new-btn" id="newChat" type="button"><span aria-hidden="true">＋</span> แชทใหม่</button>
+  <div class="brand"><svg class="logo"><use href="#pukan"/></svg>พู่กัน AI<button class="close-side" id="closeSide" type="button" aria-label="ปิดเมนู"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <button class="new-btn" id="newChat" type="button"><svg class="i" aria-hidden="true"><use href="#i-newchat"/></svg> แชทใหม่</button>
   <div class="list-label">ประวัติแชท</div>
   <nav class="chatlist" id="chatlist" aria-label="ประวัติแชท"></nav>
   <div class="plan"><div class="me" id="meAv">?</div><div>ผู้ใช้ทั่วไป<small>แพ็กเกจฟรี · ข้อความไม่จำกัด</small></div></div>
@@ -180,12 +226,12 @@ footer {
 
 <div class="main">
   <header>
-    <button class="icon-btn" id="openSide" type="button" aria-label="เปิดประวัติแชท">☰</button>
+    <button class="icon-btn" id="openSide" type="button" aria-label="เปิดประวัติแชท"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     <div class="picker">
-      <button class="picker-btn" id="pickerBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="lbl">โมเดล</span><span id="modelName">พู่กัน 4.5 Ultra</span><span class="chev">▼</span></button>
+      <button class="picker-btn" id="pickerBtn" type="button" aria-haspopup="true" aria-expanded="false"><span id="modelName">พู่กัน 4.5 Ultra</span><svg class="i chev" aria-hidden="true"><use href="#i-chev"/></svg></button>
       <div class="menu" id="menu" role="menu" hidden></div>
     </div>
-    <button class="icon-btn" id="newChat2" type="button" aria-label="แชทใหม่">✎</button>
+    <button class="icon-btn" id="newChat2" type="button" aria-label="แชทใหม่"><svg class="i" aria-hidden="true"><use href="#i-newchat"/></svg></button>
   </header>
 
   <main id="scroller">
@@ -206,8 +252,11 @@ footer {
   </main>
 
   <footer>
+    <button class="jump" id="jump" type="button" aria-label="เลื่อนลงล่างสุด" hidden><svg class="i" aria-hidden="true"><use href="#i-arrowdown"/></svg></button>
     <form class="composer" id="form">
+      <button class="c-btn" id="attach" type="button" aria-label="แนบไฟล์"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
       <textarea id="input" rows="1" placeholder="ถามพู่กันได้เลย..." maxlength="1000" aria-label="ข้อความถึงพู่กัน"></textarea>
+      <button class="c-btn" id="mic" type="button" aria-label="พูดแทนพิมพ์"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></button>
       <button class="send" id="send" type="submit" disabled aria-label="ส่ง">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       </button>
@@ -215,6 +264,7 @@ footer {
     <div class="disclaimer">พู่กันอาจให้ข้อมูลผิดพลาดได้ โปรดตรวจสอบคำตอบที่สำคัญ</div>
   </footer>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -354,14 +404,32 @@ window.PUKAN.esc = function (s) {
   });
 };
 
-// Tiny formatter: **bold**, `code`, line breaks, and "- " bullet lines.
+// Markdown-ish formatter for bot answers: # headings, **bold**, *italic*, `code`, ```code blocks```,
+// "- " bullets, "1. " numbered lists, "> " quotes and "---" rules. Escapes first, so it is safe for any text.
 window.PUKAN.fmt = function (s) {
-  var html = window.PUKAN.esc(s)
-    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-  return html.split("\n").map(function (line) {
-    return /^[-•] /.test(line) ? "<span class=\"li\">" + line.slice(2) + "</span>" : line;
-  }).join("<br>");
+  var esc = window.PUKAN.esc;
+  function inline(t) {
+    return esc(t)
+      .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\s][^*\n]*)\*/g, "$1<em>$2</em>");
+  }
+  return String(s).split("```").map(function (part, i) {
+    if (i % 2) {
+      var nl = part.indexOf("\n"), lang = nl < 0 ? "" : part.slice(0, nl).trim(), code = nl < 0 ? part : part.slice(nl + 1);
+      return '<div class="codeblock"><div class="cb-head"><span>' + esc(lang || "code") + '</span><button type="button" class="cb-copy">คัดลอกโค้ด</button></div><pre><code>' + esc(code.replace(/\n$/, "")) + "</code></pre></div>";
+    }
+    return part.replace(/^\n|\n$/g, "").split("\n").map(function (line) {
+      var m;
+      if (!line.trim()) return '<div class="gap"></div>';
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(line))) return '<div class="h h' + m[1].length + '">' + inline(m[2]) + "</div>";
+      if (/^(-{3,}|_{3,})$/.test(line.trim())) return "<hr>";
+      if ((m = /^\s*(\d+)[.)]\s+(.*)$/.exec(line))) return '<div class="li ol"><b>' + m[1] + '.</b><span>' + inline(m[2]) + "</span></div>";
+      if ((m = /^\s*[-•*]\s+(.*)$/.exec(line))) return '<div class="li"><b>•</b><span>' + inline(m[1]) + "</span></div>";
+      if ((m = /^>\s?(.*)$/.exec(line))) return '<div class="quote">' + inline(m[1]) + "</div>";
+      return "<div>" + inline(line) + "</div>";
+    }).join("");
+  }).join("");
 };
 
 window.PUKAN.store = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
@@ -393,6 +461,13 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
   chats.forEach(function (c) { getHist(c.sid).forEach(function (m) { seen.add(m.id); }); });
 
   var model = P.model(P.load("pukan_model"));
+  function ICON(n) { return '<svg class="i" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; }
+  var toastTimer = null;
+  function toast(t) {
+    var el = $("toast");
+    el.textContent = t; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
   var cur = null, thinkingEl = null, thinkTick = null, showTimer = null;
   var typingUntil = {};
 
@@ -404,6 +479,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
   function saveChats() { chats.sort(function (a, b) { return b.updated - a.updated; }); chats = chats.slice(0, 40); P.store("pukan_chats", chats); }
   function chatOf(sid) { for (var i = 0; i < chats.length; i++) if (chats[i].sid === sid) return chats[i]; return null; }
   function scrollDown() { scroller.scrollTop = scroller.scrollHeight; }
+  function nearBottom() { return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 140; }
   function lastUser(h) { for (var i = h.length - 1; i >= 0; i--) if (h[i].from === "u") return h[i]; return null; }
 
   // ---- sidebar ----
@@ -420,7 +496,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
       row.appendChild(open);
       if (c.unread) { var d = document.createElement("span"); d.className = "new-dot"; d.title = "มีคำตอบใหม่"; row.appendChild(d); }
       var del = document.createElement("button");
-      del.type = "button"; del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "ลบแชท " + c.title);
+      del.type = "button"; del.className = "del"; del.innerHTML = ICON("trash"); del.setAttribute("aria-label", "ลบแชท " + c.title);
       del.onclick = function () { removeChat(c.sid); };
       row.appendChild(del);
       el.appendChild(row);
@@ -495,7 +571,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
       var bub = row.querySelector(".bubble");
       if (m.thought) {
         var t = document.createElement("div");
-        t.className = "thought"; t.textContent = "คิดอยู่ " + fmtSecs(m.thought);
+        t.className = "thought"; t.innerHTML = ICON("spark") + "คิดเป็นเวลา " + fmtSecs(m.thought);
         bub.appendChild(t);
       }
       var txt = document.createElement("div");
@@ -511,29 +587,57 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
   function addTools(bub, text) {
     var tools = document.createElement("div");
     tools.className = "tools";
-    tools.innerHTML = '<button type="button">⧉ คัดลอก</button><button type="button" aria-label="ชอบ">👍</button><button type="button" aria-label="ไม่ชอบ">👎</button>';
-    var copy = tools.children[0];
-    copy.onclick = function () {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(text).then(function () {
-        copy.textContent = "✓ คัดลอกแล้ว";
-        setTimeout(function () { copy.textContent = "⧉ คัดลอก"; }, 1500);
-      }, function () {});
+    tools.innerHTML =
+      '<button type="button" data-t="copy" aria-label="คัดลอก" title="คัดลอก">' + ICON("copy") + '</button>' +
+      '<button type="button" data-t="up" aria-label="คำตอบดี" title="คำตอบดี">' + ICON("up") + '</button>' +
+      '<button type="button" data-t="down" aria-label="คำตอบไม่ดี" title="คำตอบไม่ดี">' + ICON("down") + '</button>' +
+      '<button type="button" data-t="speak" aria-label="อ่านออกเสียง" title="อ่านออกเสียง">' + ICON("speak") + '</button>' +
+      '<button type="button" data-t="retry" aria-label="สร้างคำตอบใหม่" title="สร้างคำตอบใหม่">' + ICON("retry") + '</button>';
+    tools.onclick = function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var t = b.dataset.t;
+      if (t === "copy") {
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText(text).then(function () {
+          b.innerHTML = ICON("check"); toast("คัดลอกแล้ว");
+          setTimeout(function () { b.innerHTML = ICON("copy"); }, 1500);
+        }, function () {});
+      } else if (t === "up" || t === "down") {
+        var other = tools.querySelector('[data-t="' + (t === "up" ? "down" : "up") + '"]');
+        other.classList.remove("on");
+        if (b.classList.toggle("on")) toast(t === "up" ? "ขอบคุณสำหรับความคิดเห็น 🙏" : "ขอบคุณครับ พู่กันจะนำไปปรับปรุง");
+      } else if (t === "speak") {
+        if (!window.speechSynthesis) { toast("เบราว์เซอร์นี้อ่านออกเสียงไม่ได้"); return; }
+        if (b.classList.contains("on")) { speechSynthesis.cancel(); return; }
+        speechSynthesis.cancel();
+        document.querySelectorAll('.tools [data-t="speak"].on').forEach(function (x) { x.classList.remove("on"); x.innerHTML = ICON("speak"); });
+        var u = new SpeechSynthesisUtterance(text.replace(/[`*#>]/g, ""));
+        u.lang = "th-TH";
+        u.onend = u.onerror = function () { b.classList.remove("on"); b.innerHTML = ICON("speak"); };
+        b.classList.add("on"); b.innerHTML = ICON("stop");
+        speechSynthesis.speak(u);
+      } else if (t === "retry") {
+        toast("ขณะนี้มีผู้ใช้งานจำนวนมาก โปรดลองใหม่ภายหลัง");
+      }
     };
-    tools.children[1].onclick = tools.children[2].onclick = function () { this.classList.toggle("on"); };
     bub.appendChild(tools);
   }
 
-  // Fake token streaming so a hand-typed answer looks generated.
+  // Fake token streaming so a hand-typed answer looks generated: word-sized chunks, small pauses at punctuation.
   function typeOut(el, text, bub, speed) {
     var chars = Array.from(text), i = 0;
-    el.classList.add("caret");
     (function step() {
-      i = Math.min(chars.length, i + Math.ceil((2 + Math.random() * 3) * speed));
+      i = Math.min(chars.length, i + Math.ceil((2 + Math.random() * 4) * speed));
       el.innerHTML = P.fmt(chars.slice(0, i).join(""));
-      scrollDown();
-      if (i < chars.length) setTimeout(step, (18 + Math.random() * 40) / Math.max(1, speed / 1.5));
-      else { el.classList.remove("caret"); addTools(bub, text); }
+      if (i < chars.length) {
+        var last = el.lastElementChild;
+        if (last && last.classList.contains("codeblock")) last = last.querySelector("code");
+        else if (last && last.lastElementChild && last.classList.contains("li")) last = last.lastElementChild;
+        (last || el).insertAdjacentHTML("beforeend", '<span class="cur"></span>');
+        var pause = /[.!?\n:,ๆ]/.test(chars[i - 1]) ? 90 + Math.random() * 160 : 0;
+        if (nearBottom()) scrollDown();
+        setTimeout(step, pause + (18 + Math.random() * 40) / Math.max(1, speed / 1.5));
+      } else { addTools(bub, text); if (nearBottom()) scrollDown(); }
     })();
   }
 
@@ -655,6 +759,18 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
   input.addEventListener("input", function () { autosize(); sendBtn.disabled = !input.value.trim(); });
   $("chips").addEventListener("click", function (e) { var c = e.target.closest(".chip"); if (c) send(c.dataset.q); });
   $("newChat").onclick = $("newChat2").onclick = newChat;
+
+  // ---- small realistic touches ----
+  scroller.addEventListener("scroll", function () { $("jump").hidden = nearBottom(); }, { passive: true });
+  $("jump").onclick = function () { scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" }); };
+  $("attach").onclick = function () { toast("การแนบไฟล์ใช้ได้เฉพาะแพ็กเกจ Pro"); };
+  $("mic").onclick = function () { toast("โหมดเสียงกำลังจะมาเร็วๆ นี้"); };
+  msgsEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".cb-copy"); if (!b || !navigator.clipboard) return;
+    navigator.clipboard.writeText(b.closest(".codeblock").querySelector("code").textContent).then(function () {
+      b.textContent = "คัดลอกแล้ว ✓"; setTimeout(function () { b.textContent = "คัดลอกโค้ด"; }, 1500);
+    }, function () {});
+  });
 
   saveChats();
   var startSid = P.load("pukan_cur");
