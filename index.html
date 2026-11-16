@@ -291,7 +291,8 @@ window.PUKAN = {
   // The first model is the default; unknown ids (e.g. old "ultra" chats) fall back to it.
   MODELS: [
     { id: "flash", name: "พู่กันซิ่ง", desc: "ตอบไวมาก ถูกบ้างผิดบ้าง แล้วแต่ดวง", speed: 2.4 },
-    { id: "think", name: "พู่กานนนนนนนนน", desc: "คิดละเอียดสุดๆ บางทีก็คิดจนลืมตอบ", speed: 0.8 }
+    { id: "think", name: "พู่กานนนนนนนนน", desc: "คิดละเอียดสุดๆ บางทีก็คิดจนลืมตอบ", speed: 0.8 },
+    { id: "pankoo", name: "พันกู้", desc: "ฝาแฝดตัวแสบ ตอบได้ทุกเรื่อง ยกเว้นเรื่องที่ถาม", speed: 1.3 }
   ]
 };
 
@@ -668,6 +669,7 @@ window.PUKAN.load = function (k) { try { return JSON.parse(localStorage.getItem(
     var mid = lu ? lu.model : model.id;
     var secs = lu ? Math.max(0, Math.round((Date.now() - lu.ts) / 1000)) : 0;
     if (mid === "think") return "กำลังคิดนานนน · " + secs + " วิ";
+    if (mid === "pankoo") return secs > 40 ? "พันกู้หลับไปแล้ว กำลังปลุก..." : "พันกู้กำลังหาเรื่องตอบ...";
     if (secs > 40) return "พู่กันกำลังคิดหนักมาก ขอจุ่มหมึกเพิ่มแป๊บ...";
     return mid === "flash" ? "กำลังพิมพ์..." : "พู่กันกำลังคิด...";
   }
